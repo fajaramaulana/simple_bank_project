@@ -1,0 +1,16 @@
+postgres:
+	docker run --name {YOUR_POSTGRES_NAME_CONTAINER} -p {YOUR_PORT_DOCKER}:{YOUR_PORT_DOCKER} -e POSTGRES_USER={YOUR_USER_POSTGRES
+YOUR_USER_POSTGRES} -e POSTGRES_PASSWORD={YOUR_PASSWORD} -d {YOUR_POSTGRES_NAME_CONTAINER}
+createdb:
+	docker exec -it {YOUR_POSTGRES_NAME_CONTAINER} createdb --username={YOUR_USER} --owner={YOUR_OWNER} {YOUR_DATABASE_NAME}
+
+dropdb:
+	docker exec -it {YOUR_POSTGRES_NAME_CONTAINER} dropdb {YOUR_DATABASE_NAME}
+
+migrateup:
+	migrate -path db/migration -database "postgresql://{YOUR_USER_POSTGRES}:{YOUR_PASSWORD_POSTGRES}@localhost:{YOUR_PORT_POSTGRES}/{YOUR_DATABASE_NAME}?sslmode=disable" -verbose up
+
+migratedown:
+	migrate -path db/migration -database "postgresql://{YOUR_USER_POSTGRES}:{YOUR_PASSWORD_POSTGRES}@localhost:{YOUR_PORT_POSTGRES}/{YOUR_DATABASE_NAME}?sslmode=disable" -verbose down
+
+.PHONY: postgres createdb dropdb migrateup migratedown
