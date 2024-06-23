@@ -1,6 +1,6 @@
-ALTER TABLE account ADD COLUMN updated_at TIMESTAMP;
-ALTER TABLE account ADD COLUMN deleted_at TIMESTAMP;
+ALTER TABLE accounts ADD COLUMN updated_at TIMESTAMP;
+ALTER TABLE accounts ADD COLUMN deleted_at TIMESTAMP;
 ALTER TABLE entries ADD COLUMN updated_at TIMESTAMP;
 ALTER TABLE entries ADD COLUMN deleted_at TIMESTAMP;
-ALTER TABLE transaction ADD COLUMN updated_at TIMESTAMP;
-ALTER TABLE transaction ADD COLUMN deleted_at TIMESTAMP;
+ALTER TABLE transactions ADD COLUMN updated_at TIMESTAMP;
+ALTER TABLE transactions ADD COLUMN deleted_at TIMESTAMP;
