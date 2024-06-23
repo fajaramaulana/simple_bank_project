@@ -10,9 +10,15 @@ import (
 
 type Querier interface {
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
+	CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error)
+	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
 	GetAccount(ctx context.Context, id int64) (Account, error)
 	GetAccountForUpdate(ctx context.Context, id int64) (Account, error)
+	GetEntry(ctx context.Context, id int64) (Entry, error)
+	GetTransaction(ctx context.Context, id int64) (Transaction, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error)
+	ListEntries(ctx context.Context, arg ListEntriesParams) ([]Entry, error)
+	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error)
 	SoftDeleteAccount(ctx context.Context, id int64) error
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
 }
