@@ -10,11 +10,10 @@ import (
 
 	_ "github.com/lib/pq"
 
-	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/joho/godotenv"
 )
 
-var testQueries *db.Queries
+var testQueries *Queries
 
 func TestMain(m *testing.M) {
 
@@ -42,7 +41,7 @@ func TestMain(m *testing.M) {
 		log.Fatal("Cannot connect to DB: ", err)
 	}
 
-	testQueries = db.New(conn)
+	testQueries = New(conn)
 
 	os.Exit(m.Run())
 }
