@@ -18,14 +18,14 @@ FOR NO KEY UPDATE;
 
 -- name: ListAccounts :many
 SELECT * FROM accounts
-WHERE deleted_at IS NULL AND  owner = $1
+WHERE deleted_at IS NULL AND  owner LIKE  $1
 ORDER BY id
 LIMIT $2
 OFFSET $3;
 
 -- name: UpdateAccount :one
 UPDATE accounts
-SET balance = $2
+SET balance = $2, updated_at = now()
 WHERE id = $1
 RETURNING *;
 

@@ -86,7 +86,7 @@ func (q *Queries) GetAccountForUpdate(ctx context.Context, id int64) (Account, e
 
 const listAccounts = `-- name: ListAccounts :many
 SELECT id, owner, currency, balance, created_at, account_uuid, updated_at, deleted_at FROM accounts
-WHERE deleted_at IS NULL AND  owner = $1
+WHERE deleted_at IS NULL AND  owner LIKE  $1
 ORDER BY id
 LIMIT $2
 OFFSET $3
@@ -144,7 +144,7 @@ func (q *Queries) SoftDeleteAccount(ctx context.Context, id int64) error {
 
 const updateAccount = `-- name: UpdateAccount :one
 UPDATE accounts
-SET balance = $2
+SET balance = $2, updated_at = now()
 WHERE id = $1
 RETURNING id, owner, currency, balance, created_at, account_uuid, updated_at, deleted_at
 `
