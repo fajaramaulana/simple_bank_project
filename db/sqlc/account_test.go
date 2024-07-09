@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"testing"
 	"time"
 
@@ -21,9 +20,7 @@ func generateAccount(t *testing.T) Account {
 	}
 
 	account, err := testQueries.CreateAccount(context.Background(), input)
-	if err != nil {
-		fmt.Printf("%# v\n", err)
-	}
+
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
 	require.Equal(t, input.Owner, account.Owner, "input and return owner should be same")
