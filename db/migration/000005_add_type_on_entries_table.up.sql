@@ -1,0 +1,1 @@
+ALTER TABLE entries ADD COLUMN type_trans varchar NOT NULL;

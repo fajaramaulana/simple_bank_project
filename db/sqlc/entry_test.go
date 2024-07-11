@@ -14,6 +14,7 @@ func generateEntryRandom(t *testing.T, account Account) Entry {
 	input := CreateEntryParams{
 		AccountID: account.ID,
 		Amount:    account.Balance,
+		TypeTrans: "debit",
 	}
 
 	entry, err := testQueries.CreateEntry(context.Background(), input)

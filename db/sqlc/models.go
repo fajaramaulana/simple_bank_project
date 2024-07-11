@@ -31,6 +31,7 @@ type Entry struct {
 	EntriesUuid uuid.UUID    `json:"entries_uuid"`
 	UpdatedAt   sql.NullTime `json:"updated_at"`
 	DeletedAt   sql.NullTime `json:"deleted_at"`
+	TypeTrans   string       `json:"type_trans"`
 }
 
 type Transaction struct {
