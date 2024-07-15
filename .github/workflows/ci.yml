@@ -1,5 +1,8 @@
 name: ci-test
 
+env:
+  $(cat .env)
+
 on:
   push:
     branches: [ "master" ]
