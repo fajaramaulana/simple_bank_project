@@ -1,7 +1,12 @@
 name: ci-test
 
 env:
-  $(cat .env)
+  DB_HOST: localhost
+  DB_PORT: 5432
+  DB_USER: root
+  DB_PASSWORD: secret
+  DB_NAME: simple_bank
+  DB_SSLMODE: disable
 
 on:
   push:
