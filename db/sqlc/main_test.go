@@ -14,6 +14,7 @@ import (
 )
 
 var testQueries *Queries
+var testDB *sql.DB
 
 func TestMain(m *testing.M) {
 
@@ -35,13 +36,13 @@ func TestMain(m *testing.M) {
 	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
 		dbUser, dbPassword, dbHost, dbPort, dbName, dbSSLMode)
 
-	conn, err := sql.Open("postgres", connStr)
+	testDB, err = sql.Open("postgres", connStr)
 
 	if err != nil {
 		log.Fatal("Cannot connect to DB: ", err)
 	}
 
-	testQueries = New(conn)
+	testQueries = New(testDB)
 
 	os.Exit(m.Run())
 }
