@@ -1,13 +1,5 @@
 name: ci-test
 
-env:
-  DB_HOST: localhost
-  DB_PORT: 5432
-  DB_USER: root
-  DB_PASSWORD: secret
-  DB_NAME: simple_bank
-  DB_SSLMODE: disable
-
 on:
   push:
     branches: [ "master" ]
@@ -20,6 +12,15 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
+    - name: Set up environment variables
+      run: |
+        echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+        echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+        echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
+        echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
+        echo "DB_SSLMODE=${{ secrets.DB_SSLMODE }}" >> $GITHUB_ENV
+
     - name: Check out code
       uses: actions/checkout@v4
 
