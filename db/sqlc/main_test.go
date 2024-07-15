@@ -21,8 +21,10 @@ func TestMain(m *testing.M) {
 	envPath := filepath.Join("/home/fajar/go_app/simplebankproject", ".env")
 	err := godotenv.Load(envPath)
 	if err != nil {
-		fmt.Printf("%# v\n", os.Getenv("DB_USER"))
-		log.Fatalf("Error loading .env file")
+		// check if ENV already set
+		if os.Getenv("DB_USER") == "" {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	// Get environment variables
