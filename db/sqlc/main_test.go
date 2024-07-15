@@ -17,10 +17,11 @@ var testQueries *Queries
 var testDB *sql.DB
 
 func TestMain(m *testing.M) {
-
+	// checking if already have .env file
 	envPath := filepath.Join("/home/fajar/go_app/simplebankproject", ".env")
 	err := godotenv.Load(envPath)
 	if err != nil {
+		fmt.Printf("%# v\n", os.Getenv("DB_USER"))
 		log.Fatalf("Error loading .env file")
 	}
 
