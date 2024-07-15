@@ -29,6 +29,18 @@ SET balance = $2, updated_at = now()
 WHERE id = $1
 RETURNING *;
 
+-- name: AddAccountBalance :one
+UPDATE accounts
+SET balance = balance + sqlc.arg(amount)
+WHERE id = sqlc.arg(id)
+RETURNING *;
+
+-- name: SubtractAccountBalance :one
+UPDATE accounts
+SET balance = balance - sqlc.arg(amount)
+WHERE id = sqlc.arg(id)
+RETURNING *;
+
 -- name: SoftDeleteAccount :exec
 UPDATE accounts
 SET deleted_at = now()

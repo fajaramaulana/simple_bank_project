@@ -89,47 +89,18 @@ func (store *Store) TransferTx(ctx context.Context, param TransferTxParam) (Tran
 		}
 
 		// TODO update account balance
-		account1, err := q.GetAccountForUpdate(ctx, param.FromAccountID)
-
-		if err != nil {
-			return err
-		}
-
-		account1BalanceConvFloat64, err := strconv.ParseFloat(account1.Balance, 64)
-		if err != nil {
-			return err
-		}
-
-		updateBalanceFromAccount := account1BalanceConvFloat64 - float64(param.Amount)
-
-		updateBalanceFromAccountNew := strconv.FormatFloat(updateBalanceFromAccount, 'f', 6, 64)
-
-		result.FromAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
-			ID:      param.FromAccountID,
-			Balance: updateBalanceFromAccountNew,
+		result.FromAccount, err = q.SubtractAccountBalance(ctx, SubtractAccountBalanceParams{
+			Amount: strconv.FormatInt(param.Amount, 10),
+			ID:     param.FromAccountID,
 		})
 
 		if err != nil {
 			return err
 		}
 
-		account2, err := q.GetAccountForUpdate(ctx, param.ToAccountID)
-		if err != nil {
-			return err
-		}
-
-		account2BalanceConvFloat64, err := strconv.ParseFloat(account2.Balance, 64)
-		if err != nil {
-			return err
-		}
-
-		updateBalanceToAccount := account2BalanceConvFloat64 + float64(param.Amount)
-
-		updateBalanceToAccountNew := strconv.FormatFloat(updateBalanceToAccount, 'f', 6, 64)
-
-		result.ToAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
-			ID:      param.ToAccountID,
-			Balance: updateBalanceToAccountNew,
+		result.ToAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+			Amount: strconv.FormatInt(param.Amount, 10),
+			ID:     param.ToAccountID,
 		})
 
 		if err != nil {

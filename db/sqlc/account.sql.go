@@ -9,6 +9,34 @@ import (
 	"context"
 )
 
+const addAccountBalance = `-- name: AddAccountBalance :one
+UPDATE accounts
+SET balance = balance + $1
+WHERE id = $2
+RETURNING id, owner, currency, balance, created_at, account_uuid, updated_at, deleted_at
+`
+
+type AddAccountBalanceParams struct {
+	Amount string `json:"amount"`
+	ID     int64  `json:"id"`
+}
+
+func (q *Queries) AddAccountBalance(ctx context.Context, arg AddAccountBalanceParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, addAccountBalance, arg.Amount, arg.ID)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Currency,
+		&i.Balance,
+		&i.CreatedAt,
+		&i.AccountUuid,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts (
   owner,
@@ -140,6 +168,34 @@ RETURNING id, owner, currency, balance, created_at, account_uuid, updated_at, de
 func (q *Queries) SoftDeleteAccount(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, softDeleteAccount, id)
 	return err
+}
+
+const subtractAccountBalance = `-- name: SubtractAccountBalance :one
+UPDATE accounts
+SET balance = balance - $1
+WHERE id = $2
+RETURNING id, owner, currency, balance, created_at, account_uuid, updated_at, deleted_at
+`
+
+type SubtractAccountBalanceParams struct {
+	Amount string `json:"amount"`
+	ID     int64  `json:"id"`
+}
+
+func (q *Queries) SubtractAccountBalance(ctx context.Context, arg SubtractAccountBalanceParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, subtractAccountBalance, arg.Amount, arg.ID)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Currency,
+		&i.Balance,
+		&i.CreatedAt,
+		&i.AccountUuid,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const updateAccount = `-- name: UpdateAccount :one
