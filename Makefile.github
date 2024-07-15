@@ -1,0 +1,27 @@
+postgres:
+	docker run --name postgres -p $(DB_PORT):$(DB_PORT) -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} -d postgres
+createdb:
+	docker exec -it postgres createdb --username=${DB_USER} --owner=${DB_USER} ${DB_NAME}
+
+dropdb:
+	docker exec -it postgres dropdb ${DB_NAME}
+
+truncateall:
+	docker exec -it postgres psql -U ${DB_USER} -d ${DB_NAME} -c "TRUNCATE TABLE accounts, entries, transactions RESTART IDENTITY;"
+
+migrateup:
+	migrate -path db/migration -database "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:$(DB_PORT)/${DB_NAME}?sslmode=${DB_SSLMODE}" -verbose up
+
+migratedown:
+	migrate -path db/migration -database "postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:$(DB_PORT)/${DB_NAME}?sslmode=${DB_SSLMODE}" -verbose down
+
+createnewmigration/%:# you can run createnewmigration/{new_name_schema}
+	migrate create -ext sql -dir db/migration -seq $(shell echo $@ | cut -d '/' -f2-)
+
+sqlc:
+	sqlc generate
+
+gotest:
+	go test -v -cover ./...
+
+.PHONY: postgres createdb dropdb migrateup migratedown createnewmigration/% sqlc gotest
