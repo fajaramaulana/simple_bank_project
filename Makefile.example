@@ -13,4 +13,13 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "postgresql://{YOUR_USER_POSTGRES}:{YOUR_PASSWORD_POSTGRES}@localhost:{YOUR_PORT_POSTGRES}/{YOUR_DATABASE_NAME}?sslmode=disable" -verbose down
 
-.PHONY: postgres createdb dropdb migrateup migratedown
+createnewmigration/%:# you can run createnewmigration/{new_name_schema}
+	migrate create -ext sql -dir db/migration -seq $(shell echo $@ | cut -d '/' -f2-)
+
+sqlc:
+	sqlc generate
+
+gotest:
+	go test -v -cover ./...
+
+.PHONY: postgres createdb dropdb migrateup migratedown createnewmigration/% sqlc gotest
