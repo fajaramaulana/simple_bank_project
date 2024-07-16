@@ -11,10 +11,10 @@ import (
 )
 
 type AccountService struct {
-	db *db.Store
+	db db.Store
 }
 
-func NewAccountService(db *db.Store) *AccountService {
+func NewAccountService(db db.Store) *AccountService {
 	return &AccountService{
 		db: db,
 	}
