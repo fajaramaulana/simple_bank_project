@@ -16,7 +16,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func InitializeAndStartApp() {
+func checkingEnv() {
 	// checking if already have .env file
 	envPath := filepath.Join("/home/fajar/go_app/simplebankproject", ".env")
 	err := godotenv.Load(envPath)
@@ -26,15 +26,15 @@ func InitializeAndStartApp() {
 			log.Fatal("Error loading .env file")
 		}
 	}
+}
 
-	// / Get environment variables
+func dbConnection() *sql.DB {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
 	dbSSLMode := os.Getenv("DB_SSLMODE")
-	PORT := os.Getenv("PORT")
 
 	// Create the connection string
 	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
@@ -46,6 +46,13 @@ func InitializeAndStartApp() {
 		log.Fatal("Cannot connect to DB: ", err)
 	}
 
+	return conn
+}
+
+func InitializeAndStartApp() {
+	checkingEnv()
+	// / Get environment variables
+	conn := dbConnection()
 	store := db.NewStore(conn)
 
 	// service
@@ -58,5 +65,6 @@ func InitializeAndStartApp() {
 
 	server.SetupRouter()
 
+	PORT := os.Getenv("PORT")
 	server.StartServer(PORT)
 }
