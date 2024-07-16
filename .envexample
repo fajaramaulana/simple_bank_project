@@ -4,3 +4,4 @@ DB_USER=
 DB_PASSWORD=
 DB_NAME=simple_bank
 DB_SSLMODE=disable
+PORT=5000
