@@ -47,11 +47,11 @@ type TransferTxParam struct {
 }
 
 type TransferTxResult struct {
-	Transaction Transaction `json:"transaction"`
-	FromAccount Account     `json:"from_account"`
-	ToAccount   Account     `json:"to_account"`
-	FromEntry   Entry       `json:"from_entry"`
-	ToEntry     Entry       `json:"to_entry"`
+	Transaction Transaction               `json:"transaction"`
+	FromAccount SubtractAccountBalanceRow `json:"from_account"`
+	ToAccount   AddAccountBalanceRow      `json:"to_account"`
+	FromEntry   Entry                     `json:"from_entry"`
+	ToEntry     Entry                     `json:"to_entry"`
 }
 
 // TransferTx perform money transfer from one account to another one account
@@ -101,7 +101,7 @@ func (store *Store) TransferTx(ctx context.Context, param TransferTxParam) (Tran
 	return result, err
 }
 
-func addBalance(ctx context.Context, q *Queries, accountID1, amount1, accountID2, amount2 int64) (fromAccount Account, toAccount Account, err error) {
+func addBalance(ctx context.Context, q *Queries, accountID1, amount1, accountID2, amount2 int64) (fromAccount SubtractAccountBalanceRow, toAccount AddAccountBalanceRow, err error) {
 	if accountID1 < accountID2 {
 		fromAccount, err := q.SubtractAccountBalance(ctx, SubtractAccountBalanceParams{
 			Amount: strconv.FormatInt(amount1, 10),
@@ -112,7 +112,7 @@ func addBalance(ctx context.Context, q *Queries, accountID1, amount1, accountID2
 			return fromAccount, toAccount, err
 		}
 
-		toAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+		toAccount, err := q.AddAccountBalance(ctx, AddAccountBalanceParams{
 			Amount: strconv.FormatInt(amount2, 10),
 			ID:     accountID2,
 		})

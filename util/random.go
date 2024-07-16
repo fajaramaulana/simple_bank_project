@@ -3,10 +3,12 @@ package util
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
 	"github.com/go-faker/faker/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func NewRandomMoneyGenerator() *rand.Rand {
@@ -37,4 +39,20 @@ func RandomCurrency() string {
 func RandomMoney(r *rand.Rand, min, max float64) string {
 	amount := min + r.Float64()*(max-min)
 	return fmt.Sprintf("%.2f", amount)
+}
+
+func RandomEmail() string {
+	return faker.Email()
+}
+
+func MakePasswordBcrypt(password string) string {
+	// return faker.PasswordBcrypt(password)
+	// generate password using bcrypt
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatalf("Error generating password hash: %v", err)
+	}
+
+	return string(hashedPassword)
 }

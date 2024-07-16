@@ -14,9 +14,12 @@ func generateAccount(t *testing.T) Account {
 
 	r := util.NewRandomMoneyGenerator()
 	input := CreateAccountParams{
-		Owner:    util.RandomName(),
-		Balance:  util.RandomMoney(r, 10.00, 99999999.00),
-		Currency: util.RandomCurrency(),
+		Owner:        util.RandomName(),
+		Email:        util.RandomEmail(),
+		Password:     util.MakePasswordBcrypt("P4ssw0rd!"),
+		Balance:      util.RandomMoney(r, 10.00, 99999999.00),
+		Currency:     util.RandomCurrency(),
+		RefreshToken: "refresh_token",
 	}
 
 	account, err := testQueries.CreateAccount(context.Background(), input)
@@ -24,6 +27,10 @@ func generateAccount(t *testing.T) Account {
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
 	require.Equal(t, input.Owner, account.Owner, "input and return owner should be same")
+	require.NotEmpty(t, account.Email)
+	require.NotEmpty(t, account.Password)
+	require.Equal(t, input.RefreshToken, account.RefreshToken, "input and return refresh token should be same")
+	require.Equal(t, input.Email, account.Email, "input and return email should be same")
 	require.Equal(t, input.Balance, account.Balance, "input and return balance should be same")
 	require.Equal(t, input.Currency, account.Currency, "input and return currency should be same")
 	require.NotEmpty(t, account.AccountUuid.String())

@@ -1,8 +1,11 @@
 CREATE TABLE "accounts" (
   "id" bigserial PRIMARY KEY,
   "owner" varchar NOT NULL,
+  "email" varchar NOT NULL,
+  "password" varchar NOT NULL,
   "currency" varchar NOT NULL,
   "balance" decimal NOT NULL,
+  "refresh_token" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
 

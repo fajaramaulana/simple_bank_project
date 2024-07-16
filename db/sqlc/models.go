@@ -12,14 +12,17 @@ import (
 )
 
 type Account struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
+	ID           int64        `json:"id"`
+	Owner        string       `json:"owner"`
+	Email        string       `json:"email"`
+	Password     string       `json:"password"`
+	Currency     string       `json:"currency"`
+	Balance      string       `json:"balance"`
+	RefreshToken string       `json:"refresh_token"`
+	CreatedAt    time.Time    `json:"created_at"`
+	AccountUuid  uuid.UUID    `json:"account_uuid"`
+	UpdatedAt    sql.NullTime `json:"updated_at"`
+	DeletedAt    sql.NullTime `json:"deleted_at"`
 }
 
 type Entry struct {
