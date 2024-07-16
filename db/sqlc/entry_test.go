@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func generateEntryRandom(t *testing.T, account Account) Entry {
+func generateEntryRandom(t *testing.T, account CreateAccountRow) Entry {
 
 	input := CreateEntryParams{
 		AccountID: account.ID,

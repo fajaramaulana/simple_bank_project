@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func generateAccount(t *testing.T) Account {
+func generateAccount(t *testing.T) CreateAccountRow {
 
 	r := util.NewRandomMoneyGenerator()
 	input := CreateAccountParams{
@@ -28,7 +28,6 @@ func generateAccount(t *testing.T) Account {
 	require.NotEmpty(t, account)
 	require.Equal(t, input.Owner, account.Owner, "input and return owner should be same")
 	require.NotEmpty(t, account.Email)
-	require.NotEmpty(t, account.Password)
 	require.Equal(t, input.RefreshToken, account.RefreshToken, "input and return refresh token should be same")
 	require.Equal(t, input.Email, account.Email, "input and return email should be same")
 	require.Equal(t, input.Balance, account.Balance, "input and return balance should be same")
@@ -87,13 +86,11 @@ func TestSoftDeleteAccount(t *testing.T) {
 }
 
 func TestListAccounts(t *testing.T) {
-	var lastAccount Account
 	for i := 0; i < 10; i++ {
-		lastAccount = generateAccount(t)
+		generateAccount(t)
 	}
 
 	arg := ListAccountsParams{
-		Owner:  lastAccount.Owner,
 		Limit:  5,
 		Offset: 0,
 	}
@@ -104,6 +101,76 @@ func TestListAccounts(t *testing.T) {
 
 	for _, account := range accounts {
 		require.NotEmpty(t, account)
+	}
+}
+
+func TestListAccountsNil(t *testing.T) {
+	var lastAccount CreateAccountRow
+	for i := 0; i < 10; i++ {
+		lastAccount = generateAccount(t)
+	}
+
+	arg := ListAccountsParams{
+		Limit:  5,
+		Offset: 444,
+	}
+
+	accounts, err := testQueries.ListAccounts(context.Background(), arg)
+	require.NoError(t, err)
+	require.Empty(t, accounts)
+
+	for _, account := range accounts {
+		require.Empty(t, account)
 		require.Equal(t, lastAccount.Owner, account.Owner)
 	}
+}
+
+func TestGetByEmail(t *testing.T) {
+	createRandAccount := generateAccount(t)
+
+	getFromAccount, err := testQueries.GetAccountByEmail(context.Background(), createRandAccount.Email)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, getFromAccount)
+	require.Equal(t, createRandAccount.ID, getFromAccount.ID, "create and get should be")
+	require.Equal(t, createRandAccount.AccountUuid.String(), getFromAccount.AccountUuid.String(), "create and get should be")
+}
+
+func TestGetAccountForUpdate(t *testing.T) {
+	createRandAccount := generateAccount(t)
+
+	getFromAccount, err := testQueries.GetAccountForUpdate(context.Background(), createRandAccount.ID)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, getFromAccount)
+	require.Equal(t, createRandAccount.ID, getFromAccount.ID, "create and get should be")
+	require.Equal(t, createRandAccount.AccountUuid.String(), getFromAccount.AccountUuid.String(), "create and get should be")
+}
+
+func TestListAccountsError(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		generateAccount(t)
+	}
+
+	arg := ListAccountsParams{
+		Limit:  -5,
+		Offset: 0,
+	}
+
+	_, err := testQueries.ListAccounts(context.Background(), arg)
+	require.Error(t, err)
+}
+
+func TestGetAccountByUUID(t *testing.T) {
+	createRandAccount := generateAccount(t)
+
+	getFromAccount, err := testQueries.GetAccountByUUID(context.Background(), createRandAccount.AccountUuid)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, getFromAccount)
+	require.Equal(t, createRandAccount.ID, getFromAccount.ID, "create and get should be")
+	require.Equal(t, createRandAccount.AccountUuid.String(), getFromAccount.AccountUuid.String(), "create and get should be")
+	require.Equal(t, createRandAccount.Balance, getFromAccount.Balance, "create and get should be")
+	require.Equal(t, createRandAccount.Currency, getFromAccount.Currency, "create and get should be")
+	require.WithinDuration(t, createRandAccount.CreatedAt, getFromAccount.CreatedAt, time.Second)
 }

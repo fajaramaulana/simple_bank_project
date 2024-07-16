@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func generateRandomTransaction(t *testing.T, acc1 Account, acc2 Account) Transaction {
+func generateRandomTransaction(t *testing.T, acc1 CreateAccountRow, acc2 CreateAccountRow) Transaction {
 	r := util.NewRandomMoneyGenerator()
 	input := CreateTransactionParams{
 		FromAccountID: acc1.ID,

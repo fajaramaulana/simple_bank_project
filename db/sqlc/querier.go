@@ -6,14 +6,19 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	AddAccountBalance(ctx context.Context, arg AddAccountBalanceParams) (AddAccountBalanceRow, error)
-	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
+	CountAccounts(ctx context.Context) (int64, error)
+	CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error)
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error)
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
 	GetAccount(ctx context.Context, id int64) (GetAccountRow, error)
+	GetAccountByEmail(ctx context.Context, email string) (GetAccountByEmailRow, error)
+	GetAccountByUUID(ctx context.Context, accountUuid uuid.UUID) (GetAccountByUUIDRow, error)
 	GetAccountForUpdate(ctx context.Context, id int64) (GetAccountForUpdateRow, error)
 	GetEntry(ctx context.Context, id int64) (Entry, error)
 	GetTransaction(ctx context.Context, id int64) (Transaction, error)
@@ -23,6 +28,7 @@ type Querier interface {
 	SoftDeleteAccount(ctx context.Context, id int64) error
 	SubtractAccountBalance(ctx context.Context, arg SubtractAccountBalanceParams) (SubtractAccountBalanceRow, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UpdateAccountRow, error)
+	UpdateProfileAccount(ctx context.Context, arg UpdateProfileAccountParams) (UpdateProfileAccountRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

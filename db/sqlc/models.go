@@ -19,6 +19,7 @@ type Account struct {
 	Currency     string       `json:"currency"`
 	Balance      string       `json:"balance"`
 	RefreshToken string       `json:"refresh_token"`
+	Status       int32        `json:"status"`
 	CreatedAt    time.Time    `json:"created_at"`
 	AccountUuid  uuid.UUID    `json:"account_uuid"`
 	UpdatedAt    sql.NullTime `json:"updated_at"`

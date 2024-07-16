@@ -6,6 +6,7 @@ CREATE TABLE "accounts" (
   "currency" varchar NOT NULL,
   "balance" decimal NOT NULL,
   "refresh_token" varchar NOT NULL,
+  "status" int NOT NULL DEFAULT 1,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
 
