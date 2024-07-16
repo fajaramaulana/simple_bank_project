@@ -81,7 +81,7 @@ func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID) (
 		Email:       account.Email,
 		Currency:    account.Currency,
 		Balance:     account.Balance,
-		CreatedAt:   account.CreatedAt.String(),
+		CreatedAt:   account.CreatedAt,
 		Status:      account.Status,
 	}
 
@@ -108,7 +108,7 @@ func (a *AccountService) ListAccount(ctx context.Context, param db.ListAccountsP
 			Email:       account.Email,
 			Currency:    account.Currency,
 			Balance:     account.Balance,
-			CreatedAt:   account.CreatedAt.String(),
+			CreatedAt:   account.CreatedAt,
 			Status:      account.Status,
 		})
 	}
@@ -128,7 +128,7 @@ func (a *AccountService) UpdateAccount(ctx context.Context, arg db.UpdateProfile
 		Email:       account.Email,
 		Currency:    account.Currency,
 		Balance:     account.Balance,
-		CreatedAt:   account.CreatedAt.String(),
+		CreatedAt:   account.CreatedAt,
 		Status:      account.Status,
 	}
 
