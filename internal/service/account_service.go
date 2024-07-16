@@ -69,7 +69,10 @@ func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID) (
 	account, err := a.db.GetAccountByUUID(ctx, uuid)
 
 	if err != nil {
-		return response.AccountResponseGet{}, err
+		if err.Error() != "sql: no rows in result set" {
+			return response.AccountResponseGet{}, err
+		}
+
 	}
 
 	result := response.AccountResponseGet{

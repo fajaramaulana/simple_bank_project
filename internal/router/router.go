@@ -5,20 +5,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type router struct {
-	router  *gin.Engine
+type Router struct {
+	Router  *gin.Engine
 	account *controller.AccountController
 }
 
-func NewRouter(account *controller.AccountController) *router {
-	return &router{
-		router:  gin.Default(),
+func NewRouter(account *controller.AccountController) *Router {
+	return &Router{
+		Router:  gin.Default(),
 		account: account,
 	}
 }
 
-func (r *router) SetupRouter(port string) {
-	v1 := r.router.Group("/api/v1")
+// SetupRouter sets up the router for the application and starts the server on the specified port.
+func (r *Router) SetupRouter(port string) {
+	v1 := r.Router.Group("/api/v1")
 
 	v1.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -32,5 +33,5 @@ func (r *router) SetupRouter(port string) {
 	v1.GET("/accounts", r.account.GetAccounts)
 	v1.PUT("/account/:uuid", r.account.UpdateAccount)
 
-	r.router.Run(":" + port)
+	r.Router.Run(":" + port)
 }
