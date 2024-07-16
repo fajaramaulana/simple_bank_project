@@ -6,20 +6,20 @@ import (
 )
 
 type Router struct {
-	Router  *gin.Engine
+	Engine  *gin.Engine
 	account *controller.AccountController
 }
 
 func NewRouter(account *controller.AccountController) *Router {
 	return &Router{
-		Router:  gin.Default(),
+		Engine:  gin.Default(),
 		account: account,
 	}
 }
 
-// SetupRouter sets up the router for the application and starts the server on the specified port.
-func (r *Router) SetupRouter(port string) {
-	v1 := r.Router.Group("/api/v1")
+// SetupRouter sets up the router for the application.
+func (r *Router) SetupRouter() {
+	v1 := r.Engine.Group("/api/v1")
 
 	v1.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -32,6 +32,9 @@ func (r *Router) SetupRouter(port string) {
 	v1.GET("/account/:uuid", r.account.GetAccount)
 	v1.GET("/accounts", r.account.GetAccounts)
 	v1.PUT("/account/:uuid", r.account.UpdateAccount)
+}
 
-	r.Router.Run(":" + port)
+// StartServer starts the HTTP server on the specified port.
+func (r *Router) StartServer(port string) {
+	r.Engine.Run(":" + port)
 }

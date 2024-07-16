@@ -56,5 +56,7 @@ func InitializeAndStartApp() {
 
 	server := router.NewRouter(accountController)
 
-	server.SetupRouter(PORT)
+	server.SetupRouter()
+
+	server.StartServer(PORT)
 }
