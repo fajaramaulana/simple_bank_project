@@ -13,7 +13,6 @@ import (
 	mockdb "github.com/fajaramaulana/simple_bank_project/db/mock"
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/controller"
-	"github.com/fajaramaulana/simple_bank_project/internal/router"
 	"github.com/fajaramaulana/simple_bank_project/internal/service"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/gin-gonic/gin"
@@ -23,8 +22,11 @@ import (
 )
 
 func TestMockGetAccountByUUIDController(t *testing.T) {
+	// Set Gin to test mode
 	gin.SetMode(gin.TestMode)
+
 	account := randomAccount()
+
 	testCases := []struct {
 		name          string
 		AccountUuid   uuid.UUID
@@ -69,7 +71,7 @@ func TestMockGetAccountByUUIDController(t *testing.T) {
 		{
 			name:        "BadRequest",
 			AccountUuid: uuid.Nil,
-			paramUuid:   " ",
+			paramUuid:   "invalid-uuid",
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccountByUUID(gomock.Any(), uuid.Nil).Times(0)
 			},
@@ -79,11 +81,13 @@ func TestMockGetAccountByUUIDController(t *testing.T) {
 		},
 	}
 
-	for i := range testCases {
-		fmt.Printf("%# v\n", i)
-		tc := testCases[i]
+	for _, tc := range testCases {
 
 		t.Run(tc.name, func(t *testing.T) {
+			// Create a mock Gin engine
+			router := gin.New()
+
+			// Create a mock controller
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
@@ -92,16 +96,18 @@ func TestMockGetAccountByUUIDController(t *testing.T) {
 
 			accountService := service.NewAccountService(store)
 			accountController := controller.NewAccountController(accountService)
-			r := router.NewRouter(accountController)
-			r.SetupRouter()
 
-			recorder := httptest.NewRecorder()
+			// Set up the Gin route and handler
+			router.GET("/api/v1/account/:uuid", func(c *gin.Context) {
+				accountController.GetAccount(c)
+			})
 
 			url := fmt.Sprintf("/api/v1/account/%v", tc.paramUuid)
-			request, err := http.NewRequest(http.MethodGet, url, nil)
-			require.NoError(t, err)
 
-			r.Engine.ServeHTTP(recorder, request)
+			request := httptest.NewRequest(http.MethodGet, url, nil)
+			recorder := httptest.NewRecorder()
+
+			router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
 	}
