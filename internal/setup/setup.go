@@ -55,13 +55,16 @@ func InitializeAndStartApp() {
 	conn := dbConnection()
 	store := db.NewStore(conn)
 
-	// service
+	// account
 	accountService := service.NewAccountService(store)
-
-	// controller
 	accountController := controller.NewAccountController(accountService)
 
-	server := router.NewRouter(accountController)
+	// transfer
+
+	transferService := service.NewTransactionService(store)
+	transferController := controller.NewTransactionController(transferService)
+
+	server := router.NewRouter(accountController, transferController)
 
 	server.SetupRouter()
 
