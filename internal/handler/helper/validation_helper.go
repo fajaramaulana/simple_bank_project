@@ -84,6 +84,8 @@ func DoValidation(i interface{}) map[string]string {
 				message[e.Field()] = fmt.Sprintf("%s must end with %s", e.Field(), e.Param())
 			case "customDate":
 				message[e.Field()] = fmt.Sprintf("%s must be in format dd/mm/yyyy", e.Field())
+			case "currency":
+				message[e.Field()] = fmt.Sprintf("%s must be valid currency", e.Field())
 			}
 
 		}
@@ -98,4 +100,17 @@ func validateCustomDate(fl validator.FieldLevel) bool {
 	dateStr := fl.Field().String()
 	_, err := time.Parse("02/01/2006", dateStr)
 	return err == nil
+}
+
+var ValidCurrencies = map[string]bool{
+	"USD": true,
+	"EUR": true,
+	"IDR": true,
+}
+
+func CurrencyValidator(fl validator.FieldLevel) bool {
+	if currency, ok := fl.Field().Interface().(string); ok {
+		return ValidCurrencies[currency]
+	}
+	return false
 }
