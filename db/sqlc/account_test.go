@@ -30,7 +30,7 @@ func generateAccount(t *testing.T) CreateAccountRow {
 
 	r := util.NewRandomMoneyGenerator()
 	input := CreateAccountParams{
-		Owner:    util.RandomName(),
+		Owner:    user.FullName,
 		Balance:  util.RandomMoney(r, 10.00, 99999999.00),
 		Currency: util.RandomCurrency(),
 		UserUuid: user.UserUuid,
