@@ -131,9 +131,10 @@ func (store *SQLStore) CreateUserWithAccountTx(ctx context.Context, arg request.
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
 		user, err := q.CreateUser(ctx, CreateUserParams{
-			Username: arg.Username,
-			FullName: arg.FullName,
-			Email:    arg.Email,
+			Username:       arg.Username,
+			FullName:       arg.FullName,
+			HashedPassword: arg.Password,
+			Email:          arg.Email,
 		})
 
 		if err != nil {
@@ -141,7 +142,7 @@ func (store *SQLStore) CreateUserWithAccountTx(ctx context.Context, arg request.
 		}
 
 		account, err := q.CreateAccount(ctx, CreateAccountParams{
-			Owner:    user.Username,
+			Owner:    user.FullName,
 			Balance:  "0",
 			Currency: arg.Currency,
 			UserUuid: user.UserUuid,

@@ -162,11 +162,13 @@ func TestTransTx(t *testing.T) {
 
 func TestCreateUserWithAccountTx(t *testing.T) {
 	store := NewStore(testDB)
+	hashPass, err := util.MakePasswordBcrypt("P4ssw0rd!")
 
+	require.NoError(t, err)
 	arg := request.CreateUserRequest{
 		Username: util.RandomUsername(),
 		Email:    util.RandomEmail(),
-		Password: "P4ssw0rd!",
+		Password: hashPass,
 		FullName: util.RandomUsername(),
 		Currency: util.RandomCurrency(),
 	}
