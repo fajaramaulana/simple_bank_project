@@ -24,7 +24,7 @@ func (tf *TransactionController) CreateTransfer(ctx *gin.Context) {
 	var req request.CreateTransferRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		message, data := helper.GlobalCheckingErrorBindJson(err.Error())
+		message, data := helper.GlobalCheckingErrorBindJson(err.Error(), req)
 		log.Printf("Error: %s", message)
 		helper.ReturnJSONError(ctx, http.StatusBadRequest, message, nil, data)
 		return
