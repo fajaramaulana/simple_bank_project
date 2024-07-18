@@ -2,8 +2,8 @@ package request
 
 type CreateAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR IDR"`
-	Email    string `json:"email" binding:"required,email"`
+	Currency string `json:"currency" binding:"required,currency"`
+	UserUUID string `json:"user_uuid" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
