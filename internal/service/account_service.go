@@ -21,33 +21,41 @@ func NewAccountService(db db.Store) *AccountService {
 }
 
 func (a *AccountService) CreateAccount(ctx context.Context, request *request.CreateAccountRequest) (response.AccountResponseCreate, error) {
+	// convert req.uuseruuid to uuid
+	useruuid, err := helper.ConvertStringToUUID(request.UserUUID)
+	if err != nil {
+		return response.AccountResponseCreate{}, err
+	}
+
+	// check if user already exists
+	user, err := a.db.GetUserByUserUUID(ctx, useruuid)
+	if err != nil {
+		return response.AccountResponseCreate{}, err
+	}
+
 	// check if account already exists
-	checkEmail, err := a.db.GetAccountByEmail(ctx, request.Email)
+	param := db.GetAccountByUserUUIDAndCurrencyParams{
+		UserUuid: user.UserUuid,
+		Currency: request.Currency,
+	}
+
+	checkUserUUIDCurrency, err := a.db.GetAccountByUserUUIDAndCurrency(ctx, param)
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {
 			return response.AccountResponseCreate{}, err
 		}
 	}
 
-	if checkEmail.ID != 0 {
+	if checkUserUUIDCurrency.ID != 0 {
 		// return error account already exists
 		return response.AccountResponseCreate{}, nil
 	}
 	// create account
-
-	// generate password bcrypt
-	password, err := helper.GeneratePasswordBcrypt(request.Password)
-	if err != nil {
-		return response.AccountResponseCreate{}, err
-	}
-
 	account, err := a.db.CreateAccount(ctx, db.CreateAccountParams{
-		Owner:        request.Owner,
-		Email:        request.Email,
-		Password:     password,
-		Currency:     "USD",
-		Balance:      "0",
-		RefreshToken: "refresh_token",
+		Owner:    request.Owner,
+		Currency: "USD",
+		Balance:  "0",
+		UserUuid: useruuid,
 	})
 
 	if err != nil {
@@ -57,9 +65,14 @@ func (a *AccountService) CreateAccount(ctx context.Context, request *request.Cre
 	result := response.AccountResponseCreate{
 		AccountUUID: account.AccountUuid,
 		Owner:       account.Owner,
-		Email:       account.Email,
 		Currency:    account.Currency,
 		Balance:     account.Balance,
+		User: response.UserGetSimple{
+			UserUUID: user.UserUuid.String(),
+			Username: user.Username,
+			FullName: user.FullName,
+			Email:    user.Email,
+		},
 	}
 
 	return result, nil
@@ -75,14 +88,26 @@ func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID) (
 
 	}
 
+	user, err := a.db.GetUserByUserUUID(ctx, account.UserUuid)
+	if err != nil {
+		if err.Error() != "sql: no rows in result set" {
+			return response.AccountResponseGet{}, err
+		}
+	}
+
 	result := response.AccountResponseGet{
 		AccountUUID: account.AccountUuid,
 		Owner:       account.Owner,
-		Email:       account.Email,
 		Currency:    account.Currency,
 		Balance:     account.Balance,
 		CreatedAt:   account.CreatedAt,
-		Status:      account.Status,
+		Status:      int32(account.Status),
+		User: response.UserGetSimple{
+			UserUUID: user.UserUuid.String(),
+			Username: user.Username,
+			FullName: user.FullName,
+			Email:    user.Email,
+		},
 	}
 
 	return result, nil
@@ -102,14 +127,20 @@ func (a *AccountService) ListAccount(ctx context.Context, param db.ListAccountsP
 
 	var result []response.AccountResponseGet
 	for _, account := range accounts {
+		// if i query to get user by useruuid here is n+1 problem
 		result = append(result, response.AccountResponseGet{
 			AccountUUID: account.AccountUuid,
 			Owner:       account.Owner,
-			Email:       account.Email,
 			Currency:    account.Currency,
 			Balance:     account.Balance,
 			CreatedAt:   account.CreatedAt,
-			Status:      account.Status,
+			Status:      int32(account.Status),
+			User: response.UserGetSimple{
+				UserUUID: account.UserUuid.String(),
+				Username: account.Username.String,
+				FullName: account.FullName.String,
+				Email:    account.Email.String,
+			},
 		})
 	}
 
@@ -125,11 +156,16 @@ func (a *AccountService) UpdateAccount(ctx context.Context, arg db.UpdateProfile
 	result := response.AccountResponseGet{
 		AccountUUID: account.AccountUuid,
 		Owner:       account.Owner,
-		Email:       account.Email,
 		Currency:    account.Currency,
 		Balance:     account.Balance,
 		CreatedAt:   account.CreatedAt,
-		Status:      account.Status,
+		Status:      int32(account.Status),
+		User: response.UserGetSimple{
+			UserUUID: account.UserUuid.String(),
+			Username: account.Username.String,
+			FullName: account.FullName.String,
+			Email:    account.Email.String,
+		},
 	}
 
 	return result, nil
