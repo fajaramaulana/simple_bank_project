@@ -1,12 +1,10 @@
 CREATE TABLE "accounts" (
   "id" bigserial PRIMARY KEY,
+  "user_uuid" UUID NOT NULL,
   "owner" varchar NOT NULL,
-  "email" varchar NOT NULL,
-  "password" varchar NOT NULL,
   "currency" varchar NOT NULL,
   "balance" decimal NOT NULL,
-  "refresh_token" varchar NOT NULL,
-  "status" int NOT NULL DEFAULT 1,
+  "status" smallint NOT NULL DEFAULT 1,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
 
@@ -42,3 +40,8 @@ ALTER TABLE "entries" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id"
 ALTER TABLE "transactions" ADD FOREIGN KEY ("from_account_id") REFERENCES "accounts" ("id");
 
 ALTER TABLE "transactions" ADD FOREIGN KEY ("to_account_id") REFERENCES "accounts" ("id");
+
+CREATE INDEX ON "accounts" ("user_uuid");
+
+-- CREATE UNIQUE INDEX ON "accounts" ("owner", "currency");
+ALTER TABLE "accounts" ADD CONSTRAINT "owner_currency_key" UNIQUE ("owner", "currency");
