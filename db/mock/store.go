@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	request "github.com/fajaramaulana/simple_bank_project/internal/handler/request"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -144,6 +145,21 @@ func (m *MockStore) CreateUser(arg0 context.Context, arg1 db.CreateUserParams) (
 func (mr *MockStoreMockRecorder) CreateUser(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockStore)(nil).CreateUser), arg0, arg1)
+}
+
+// CreateUserWithAccountTx mocks base method.
+func (m *MockStore) CreateUserWithAccountTx(arg0 context.Context, arg1 request.CreateUserRequest) (db.CreateUserWithAccountResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUserWithAccountTx", arg0, arg1)
+	ret0, _ := ret[0].(db.CreateUserWithAccountResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateUserWithAccountTx indicates an expected call of CreateUserWithAccountTx.
+func (mr *MockStoreMockRecorder) CreateUserWithAccountTx(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserWithAccountTx", reflect.TypeOf((*MockStore)(nil).CreateUserWithAccountTx), arg0, arg1)
 }
 
 // GetAccount mocks base method.

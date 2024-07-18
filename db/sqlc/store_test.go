@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
+	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -155,6 +158,54 @@ func TestTransTx(t *testing.T) {
 
 	require.Equal(t, accountOneBalance-float64(n)*float64(amount), updatedAccount1Balance)
 	require.Equal(t, accountTwoBalance+float64(n)*float64(amount), updatedAccount2Balance)
+}
+
+func TestCreateUserWithAccountTx(t *testing.T) {
+	store := NewStore(testDB)
+
+	arg := request.CreateUserRequest{
+		Username: util.RandomUsername(),
+		Email:    util.RandomEmail(),
+		Password: "P4ssw0rd!",
+		FullName: util.RandomUsername(),
+		Currency: util.RandomCurrency(),
+	}
+
+	res, err := store.CreateUserWithAccountTx(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotZero(t, res.User.UserUUID)
+	require.NotZero(t, res.Account.AccountUUID)
+
+	userUUID, err := helper.ConvertStringToUUID(res.User.UserUUID)
+	require.NoError(t, err)
+
+	// check user
+	checkUser, err := store.GetUserByUserUUID(context.Background(), userUUID)
+	require.NoError(t, err)
+	require.NotEmpty(t, checkUser)
+
+	// check account
+	checkAccount, err := store.GetAccountByUUID(context.Background(), res.Account.AccountUUID)
+	require.NoError(t, err)
+	require.NotEmpty(t, checkAccount)
+
+	require.Equal(t, checkUser.UserUuid, checkAccount.UserUuid)
+}
+
+func TestCreateUserWithAccountTxExist(t *testing.T) {
+	store := NewStore(testDB)
+
+	user := GenerateUser(t)
+	arg := request.CreateUserRequest{
+		Username: user.Username,
+		Email:    user.Email,
+		Password: "P4ssw0rd!",
+		FullName: user.FullName,
+		Currency: util.RandomCurrency(),
+	}
+
+	_, err := store.CreateUserWithAccountTx(context.Background(), arg)
+	require.Error(t, err)
 }
 
 func TestTransTxDeadlock(t *testing.T) {

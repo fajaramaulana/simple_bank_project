@@ -5,10 +5,14 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/response"
 )
 
 // Store represents the interface for interacting with the database.
 type Store interface {
+	CreateUserWithAccountTx(ctx context.Context, arg request.CreateUserRequest) (CreateUserWithAccountResult, error)
 	TransferTx(ctx context.Context, param TransferTxParam) (TransferTxResult, error)
 	Querier
 }
@@ -32,6 +36,11 @@ type TransferTxResult struct {
 	ToAccount   AddAccountBalanceRow      `json:"to_account"`
 	FromEntry   Entry                     `json:"from_entry"`
 	ToEntry     Entry                     `json:"to_entry"`
+}
+
+type CreateUserWithAccountResult struct {
+	User    response.UserGetSimple         `json:"user"`
+	Account response.AccountResponseSimple `json:"account"`
 }
 
 // NewStore creates a new instance of the Store interface.
@@ -109,6 +118,51 @@ func (store *SQLStore) TransferTx(ctx context.Context, param TransferTxParam) (T
 		result.FromAccount, result.ToAccount, err = addBalance(ctx, q, param.FromAccountID, param.Amount, param.ToAccountID, param.Amount)
 		if err != nil {
 			return err
+		}
+
+		return nil
+	})
+
+	return result, err
+}
+
+func (store *SQLStore) CreateUserWithAccountTx(ctx context.Context, arg request.CreateUserRequest) (CreateUserWithAccountResult, error) {
+	var result CreateUserWithAccountResult
+	err := store.execTx(ctx, func(q *Queries) error {
+		var err error
+		user, err := q.CreateUser(ctx, CreateUserParams{
+			Username: arg.Username,
+			FullName: arg.FullName,
+			Email:    arg.Email,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		account, err := q.CreateAccount(ctx, CreateAccountParams{
+			Owner:    user.Username,
+			Balance:  "0",
+			Currency: arg.Currency,
+			UserUuid: user.UserUuid,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		result.Account = response.AccountResponseSimple{
+			AccountUUID: account.AccountUuid,
+			Owner:       account.Owner,
+			Currency:    account.Currency,
+			Balance:     account.Balance,
+		}
+
+		result.User = response.UserGetSimple{
+			UserUUID: user.UserUuid.String(),
+			Username: user.Username,
+			FullName: user.FullName,
+			Email:    user.Email,
 		}
 
 		return nil
