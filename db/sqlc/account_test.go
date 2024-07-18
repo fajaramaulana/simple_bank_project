@@ -11,10 +11,11 @@ import (
 )
 
 func generateAccount(t *testing.T) CreateAccountRow {
-
+	password, err := util.MakePasswordBcrypt("P4ssw0rd!")
+	require.NoError(t, err)
 	inputUser := CreateUserParams{
 		Username:       util.RandomUsername(),
-		HashedPassword: util.MakePasswordBcrypt("P4ssw0rd!"),
+		HashedPassword: password,
 		FullName:       util.RandomName(),
 		Email:          util.RandomEmail(),
 	}
