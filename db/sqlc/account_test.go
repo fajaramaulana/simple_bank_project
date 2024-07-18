@@ -12,14 +12,28 @@ import (
 
 func generateAccount(t *testing.T) CreateAccountRow {
 
+	inputUser := CreateUserParams{
+		Username:       util.RandomUsername(),
+		HashedPassword: util.MakePasswordBcrypt("P4ssw0rd!"),
+		FullName:       util.RandomName(),
+		Email:          util.RandomEmail(),
+	}
+
+	user, err := testQueries.CreateUser(context.Background(), inputUser)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
+	require.Equal(t, inputUser.Username, user.Username, "input and return username should be same")
+	require.Equal(t, inputUser.Email, user.Email, "input and return email should be same")
+	require.NotEmpty(t, user.UserUuid.String())
+	require.NotEmpty(t, user.Role)
+
 	r := util.NewRandomMoneyGenerator()
 	input := CreateAccountParams{
-		Owner:        util.RandomName(),
-		Email:        util.RandomEmail(),
-		Password:     util.MakePasswordBcrypt("P4ssw0rd!"),
-		Balance:      util.RandomMoney(r, 10.00, 99999999.00),
-		Currency:     util.RandomCurrency(),
-		RefreshToken: "refresh_token",
+		Owner:    util.RandomName(),
+		Balance:  util.RandomMoney(r, 10.00, 99999999.00),
+		Currency: util.RandomCurrency(),
+		UserUuid: user.UserUuid,
 	}
 
 	account, err := testQueries.CreateAccount(context.Background(), input)
@@ -27,9 +41,6 @@ func generateAccount(t *testing.T) CreateAccountRow {
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
 	require.Equal(t, input.Owner, account.Owner, "input and return owner should be same")
-	require.NotEmpty(t, account.Email)
-	require.Equal(t, input.RefreshToken, account.RefreshToken, "input and return refresh token should be same")
-	require.Equal(t, input.Email, account.Email, "input and return email should be same")
 	require.Equal(t, input.Balance, account.Balance, "input and return balance should be same")
 	require.Equal(t, input.Currency, account.Currency, "input and return currency should be same")
 	require.NotEmpty(t, account.AccountUuid.String())
@@ -68,7 +79,7 @@ func TestUpdateAccount(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEmpty(t, updatedData)
-	require.Equal(t, params.ID, updatedData.ID)
+	require.Equal(t, params.ID, updatedData.AccountID)
 	require.Equal(t, params.Balance, updatedData.Balance)
 	require.NotEmpty(t, updatedData.UpdatedAt)
 }
@@ -123,17 +134,6 @@ func TestListAccountsNil(t *testing.T) {
 		require.Empty(t, account)
 		require.Equal(t, lastAccount.Owner, account.Owner)
 	}
-}
-
-func TestGetByEmail(t *testing.T) {
-	createRandAccount := generateAccount(t)
-
-	getFromAccount, err := testQueries.GetAccountByEmail(context.Background(), createRandAccount.Email)
-
-	require.NoError(t, err)
-	require.NotEmpty(t, getFromAccount)
-	require.Equal(t, createRandAccount.ID, getFromAccount.ID, "create and get should be")
-	require.Equal(t, createRandAccount.AccountUuid.String(), getFromAccount.AccountUuid.String(), "create and get should be")
 }
 
 func TestGetAccountForUpdate(t *testing.T) {
