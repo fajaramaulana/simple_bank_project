@@ -53,14 +53,18 @@ func (a *AccountController) CreateAccount(ctx *gin.Context) {
 
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
-		helper.ReturnJSONError(ctx, http.StatusInternalServerError, "Internal server error", nil, nil)
+		if err.Error() == "sql: no rows in result set" {
+			helper.ReturnJSONError(ctx, http.StatusNotFound, "Data Not found", nil, nil)
+		} else {
+			helper.ReturnJSONError(ctx, http.StatusInternalServerError, "Internal server error", nil, err.Error())
+		}
 		return
 	}
 
 	// checking account already exist
-	if account.AccountUUID.String() == "" {
+	if account.Owner == "" {
 		log.Println("Error: Account already exists")
-		helper.ReturnJSONError(ctx, http.StatusConflict, "Account already exists", nil, nil)
+		helper.ReturnJSONError(ctx, http.StatusConflict, "Account with same currency already exists", nil, nil)
 		return
 	}
 	helper.ReturnJSON(ctx, http.StatusCreated, "Account created", account)

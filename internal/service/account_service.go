@@ -53,7 +53,7 @@ func (a *AccountService) CreateAccount(ctx context.Context, request *request.Cre
 	// create account
 	account, err := a.db.CreateAccount(ctx, db.CreateAccountParams{
 		Owner:    request.Owner,
-		Currency: "USD",
+		Currency: request.Currency,
 		Balance:  "0",
 		UserUuid: useruuid,
 	})

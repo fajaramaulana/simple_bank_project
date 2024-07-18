@@ -4,7 +4,6 @@ type CreateAccountRequest struct {
 	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,currency"`
 	UserUUID string `json:"user_uuid" binding:"required"`
-	Password string `json:"password" binding:"required"`
 }
 
 type GetAccountRequest struct {
