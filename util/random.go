@@ -32,6 +32,9 @@ func RandomName() string {
 	return nameRet
 }
 
+func RandomUsername() string {
+	return faker.Username()
+}
 func RandomCurrency() string {
 	return faker.Currency()
 }
