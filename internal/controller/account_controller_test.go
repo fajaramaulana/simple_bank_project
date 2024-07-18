@@ -40,6 +40,8 @@ func TestMockGetAccountByUUIDController(t *testing.T) {
 			paramUuid:   account.AccountUuid.String(),
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccountByUUID(gomock.Any(), gomock.Eq(account.AccountUuid)).Times(1).Return(account, nil)
+
+				store.EXPECT().GetUserByUserUUID(gomock.Any(), gomock.Eq(account.UserUuid)).Times(1).Return(db.GetUserByUserUUIDRow{}, nil)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -52,6 +54,7 @@ func TestMockGetAccountByUUIDController(t *testing.T) {
 			paramUuid:   account.AccountUuid.String(),
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccountByUUID(gomock.Any(), gomock.Eq(account.AccountUuid)).Times(1).Return(db.GetAccountByUUIDRow{}, sql.ErrNoRows)
+				store.EXPECT().GetUserByUserUUID(gomock.Any(), gomock.Any()).Times(1).Return(db.GetUserByUserUUIDRow{}, sql.ErrNoRows)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -125,11 +128,11 @@ func TestGetAccountsController(t *testing.T) {
 	account5 := randomAccount()
 
 	expectedAccounts := []db.ListAccountsRow{
-		{ID: account.ID, AccountUuid: account.AccountUuid, Owner: account.Owner, Email: account.Email, Currency: account.Currency, Balance: account.Balance, CreatedAt: account.CreatedAt, Status: account.Status},
-		{ID: account2.ID, AccountUuid: account2.AccountUuid, Owner: account2.Owner, Email: account2.Email, Currency: account2.Currency, Balance: account2.Balance, CreatedAt: account2.CreatedAt, Status: account2.Status},
-		{ID: account3.ID, AccountUuid: account3.AccountUuid, Owner: account3.Owner, Email: account3.Email, Currency: account3.Currency, Balance: account3.Balance, CreatedAt: account3.CreatedAt, Status: account3.Status},
-		{ID: account4.ID, AccountUuid: account4.AccountUuid, Owner: account4.Owner, Email: account4.Email, Currency: account4.Currency, Balance: account4.Balance, CreatedAt: account4.CreatedAt, Status: account4.Status},
-		{ID: account5.ID, AccountUuid: account5.AccountUuid, Owner: account5.Owner, Email: account5.Email, Currency: account5.Currency, Balance: account5.Balance, CreatedAt: account5.CreatedAt, Status: account5.Status},
+		{ID: account.ID, AccountUuid: account.AccountUuid, Owner: account.Owner, UserUuid: account.UserUuid, Currency: account.Currency, Balance: account.Balance, CreatedAt: account.CreatedAt, Status: account.Status},
+		{ID: account2.ID, AccountUuid: account2.AccountUuid, Owner: account2.Owner, UserUuid: account2.UserUuid, Currency: account2.Currency, Balance: account2.Balance, CreatedAt: account2.CreatedAt, Status: account2.Status},
+		{ID: account3.ID, AccountUuid: account3.AccountUuid, Owner: account3.Owner, UserUuid: account3.UserUuid, Currency: account3.Currency, Balance: account3.Balance, CreatedAt: account3.CreatedAt, Status: account3.Status},
+		{ID: account4.ID, AccountUuid: account4.AccountUuid, Owner: account4.Owner, UserUuid: account4.UserUuid, Currency: account4.Currency, Balance: account4.Balance, CreatedAt: account4.CreatedAt, Status: account4.Status},
+		{ID: account5.ID, AccountUuid: account5.AccountUuid, Owner: account5.Owner, UserUuid: account5.UserUuid, Currency: account5.Currency, Balance: account5.Balance, CreatedAt: account5.CreatedAt, Status: account5.Status},
 	}
 
 	testCases := []struct {
@@ -291,14 +294,18 @@ func randomAccount() db.GetAccountByUUIDRow {
 	if err != nil {
 		return db.GetAccountByUUIDRow{}
 	}
+
+	user := db.GetUserByUserUUIDRow{
+		UserUuid: uuid.New(),
+	}
+
 	r := util.NewRandomMoneyGenerator()
 	return db.GetAccountByUUIDRow{
-		ID:           int64(randomInt[0]),
-		Owner:        util.RandomName(),
-		Balance:      util.RandomMoney(r, 10.00, 99999999.00),
-		Currency:     util.RandomCurrency(),
-		Email:        util.RandomEmail(),
-		AccountUuid:  uuid.New(),
-		RefreshToken: "refresh_token1",
+		ID:          int64(randomInt[0]),
+		Owner:       util.RandomName(),
+		Balance:     util.RandomMoney(r, 10.00, 99999999.00),
+		Currency:    util.RandomCurrency(),
+		AccountUuid: uuid.New(),
+		UserUuid:    user.UserUuid,
 	}
 }

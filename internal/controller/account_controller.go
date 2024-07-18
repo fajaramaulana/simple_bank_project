@@ -58,7 +58,7 @@ func (a *AccountController) CreateAccount(ctx *gin.Context) {
 	}
 
 	// checking account already exist
-	if account.Email == "" {
+	if account.AccountUUID.String() == "" {
 		log.Println("Error: Account already exists")
 		helper.ReturnJSONError(ctx, http.StatusConflict, "Account already exists", nil, nil)
 		return
@@ -97,7 +97,7 @@ func (a *AccountController) GetAccount(ctx *gin.Context) {
 		return
 	}
 
-	if account.Email == "" {
+	if account.Owner == "" {
 		log.Println("Error: Account not found")
 		helper.ReturnJSONError(ctx, http.StatusNotFound, "Account not found", nil, nil)
 		return
@@ -201,7 +201,7 @@ func (a *AccountController) UpdateAccount(ctx *gin.Context) {
 		AccountUuid: uuidAcc,
 		Owner:       request.Owner,
 		Currency:    request.Currency,
-		Status:      request.Status,
+		Status:      int16(request.Status),
 	}
 
 	account, err := a.accountService.UpdateAccount(ctx.Request.Context(), arg)
@@ -212,7 +212,7 @@ func (a *AccountController) UpdateAccount(ctx *gin.Context) {
 		return
 	}
 
-	if account.Email == "" {
+	if account.AccountUUID.String() == "" {
 		log.Println("Error: Account not found")
 		helper.ReturnJSONError(ctx, http.StatusNotFound, "Account not found", nil, nil)
 		return
