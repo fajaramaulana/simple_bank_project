@@ -36,7 +36,9 @@ func RandomUsername() string {
 	return faker.Username()
 }
 func RandomCurrency() string {
-	return faker.Currency()
+	// random only USD EUR IDR
+	currency := []string{"USD", "EUR", "IDR"}
+	return currency[rand.Intn(len(currency))]
 }
 
 func RandomMoney(r *rand.Rand, min, max float64) string {
