@@ -14,6 +14,13 @@ type AccountResponseCreate struct {
 	User        UserGetSimple `json:"user"`
 }
 
+type AccountResponseSimple struct {
+	AccountUUID uuid.UUID `json:"account_uuid"`
+	Owner       string    `json:"owner"`
+	Currency    string    `json:"currency"`
+	Balance     string    `json:"balance"`
+}
+
 type AccountResponseGet struct {
 	AccountUUID uuid.UUID     `json:"account_uuid"`
 	Owner       string        `json:"owner"`
