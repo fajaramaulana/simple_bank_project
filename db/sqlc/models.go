@@ -12,18 +12,16 @@ import (
 )
 
 type Account struct {
-	ID           int64        `json:"id"`
-	Owner        string       `json:"owner"`
-	Email        string       `json:"email"`
-	Password     string       `json:"password"`
-	Currency     string       `json:"currency"`
-	Balance      string       `json:"balance"`
-	RefreshToken string       `json:"refresh_token"`
-	Status       int32        `json:"status"`
-	CreatedAt    time.Time    `json:"created_at"`
-	AccountUuid  uuid.UUID    `json:"account_uuid"`
-	UpdatedAt    sql.NullTime `json:"updated_at"`
-	DeletedAt    sql.NullTime `json:"deleted_at"`
+	ID          int64        `json:"id"`
+	UserUuid    uuid.UUID    `json:"user_uuid"`
+	Owner       string       `json:"owner"`
+	Currency    string       `json:"currency"`
+	Balance     string       `json:"balance"`
+	Status      int16        `json:"status"`
+	CreatedAt   time.Time    `json:"created_at"`
+	AccountUuid uuid.UUID    `json:"account_uuid"`
+	UpdatedAt   sql.NullTime `json:"updated_at"`
+	DeletedAt   sql.NullTime `json:"deleted_at"`
 }
 
 type Entry struct {
@@ -38,6 +36,17 @@ type Entry struct {
 	TypeTrans   string       `json:"type_trans"`
 }
 
+type Session struct {
+	ID           uuid.UUID `json:"id"`
+	UserUuid     uuid.UUID `json:"user_uuid"`
+	RefreshToken string    `json:"refresh_token"`
+	UserAgent    string    `json:"user_agent"`
+	ClientIp     string    `json:"client_ip"`
+	IsBlocked    bool      `json:"is_blocked"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
 type Transaction struct {
 	ID              int64        `json:"id"`
 	FromAccountID   int64        `json:"from_account_id"`
@@ -47,4 +56,18 @@ type Transaction struct {
 	TransactionUuid uuid.UUID    `json:"transaction_uuid"`
 	UpdatedAt       sql.NullTime `json:"updated_at"`
 	DeletedAt       sql.NullTime `json:"deleted_at"`
+}
+
+type User struct {
+	ID                int64     `json:"id"`
+	UserUuid          uuid.UUID `json:"user_uuid"`
+	Username          string    `json:"username"`
+	HashedPassword    string    `json:"hashed_password"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	Role              string    `json:"role"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	DeletedAt         time.Time `json:"deleted_at"`
 }
