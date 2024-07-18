@@ -11,7 +11,7 @@ SELECT  user_uuid
        ,updated_at
        ,deleted_at
 FROM users
-WHERE deleted_at IS NULL
+WHERE deleted_at = '0001-01-01 00:00:00+00'
 AND user_uuid = $1
 LIMIT 1;
 
@@ -25,7 +25,7 @@ SELECT  user_uuid
        ,updated_at
        ,deleted_at
 FROM users
-WHERE deleted_at IS NULL
+WHERE deleted_at = '0001-01-01 00:00:00+00'
 AND username = $1
 LIMIT 1;
 
@@ -39,7 +39,7 @@ SELECT  user_uuid
        ,updated_at
        ,deleted_at
 FROM users
-WHERE deleted_at IS NULL
+WHERE deleted_at = '0001-01-01 00:00:00+00'
 AND email = $1
 LIMIT 1;
 
