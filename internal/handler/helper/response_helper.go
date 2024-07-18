@@ -3,6 +3,7 @@ package helper
 import (
 	"fmt"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -10,14 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GlobalCheckingErrorBindJson(errMessage string) (message string, returnError map[string]string) {
+func GlobalCheckingErrorBindJson(errMessage string, request interface{}) (message string, returnError map[string]string) {
 	if errMessage == "EOF" {
 		message := "Request body is empty"
 		return message, map[string]string{
 			"error": errMessage,
 		}
 	}
-	returnDataErrorCheck, isExistError := ExtractFieldNameFromError(errMessage)
+	returnDataErrorCheck, isExistError := ExtractFieldNameFromError(errMessage, request)
 	if isExistError {
 		message := "Validation error"
 		return message, returnDataErrorCheck
@@ -29,14 +30,13 @@ func GlobalCheckingErrorBindJson(errMessage string) (message string, returnError
 	}
 }
 
-func ExtractFieldNameFromError(errorMessage string) (fieldErrorsReturn map[string]string, boolReturn bool) {
+func ExtractFieldNameFromError(errorMessage string, request interface{}) (fieldErrorsReturn map[string]string, boolReturn bool) {
 	fieldErrors := make(map[string]string)
 	// Define a regular expression pattern to match the field name in the error message
 	regexPattern := `Key: '([^']+)' Error:Field validation for '([^']+)' failed on the '([^']+)' tag`
 	regex := regexp.MustCompile(regexPattern)
 
 	boolReturn = false
-
 	// Find all matches in the error message
 	matches := regex.FindAllStringSubmatch(errorMessage, -1)
 	if len(matches) > 0 {
@@ -46,75 +46,76 @@ func ExtractFieldNameFromError(errorMessage string) (fieldErrorsReturn map[strin
 
 			// Combine the key and field name to form a unique identifier
 			identifier := fieldName
+			fieldNameKey := getJSONTagName(reflect.TypeOf(request), identifier)
 
 			// Store the error message in the map using the identifier as the key
 			switch errorMessage {
 			case "required":
-				fieldErrors[identifier] = fmt.Sprintf("%s is required", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s is required", fieldNameKey)
 			case "datetime":
-				fieldErrors[identifier] = fmt.Sprintf("%s is not valid datetime", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s is not valid datetime", fieldNameKey)
 			case "gt": // greater than
-				fieldErrors[identifier] = fmt.Sprintf("%s must be greater than %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be greater than %s", fieldNameKey, errorMessage)
 			case "gte": // greater than or equal
-				fieldErrors[identifier] = fmt.Sprintf("%s must be greater than or equal %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be greater than or equal %s", fieldNameKey, errorMessage)
 			case "lt": // less than
-				fieldErrors[identifier] = fmt.Sprintf("%s must be less than %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be less than %s", fieldNameKey, errorMessage)
 			case "lte": // less than or equal
-				fieldErrors[identifier] = fmt.Sprintf("%s must be less than or equal %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be less than or equal %s", fieldNameKey, errorMessage)
 			case "max": // max length
-				fieldErrors[identifier] = fmt.Sprintf("%s must be less than %s characters", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be less than %s characters", fieldNameKey, errorMessage)
 			case "min": // min length
-				fieldErrors[identifier] = fmt.Sprintf("%s must be greater than %s characters", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be greater than %s characters", fieldNameKey, errorMessage)
 			case "email":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be a valid email", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be a valid email", fieldNameKey)
 			case "eqfield":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be equal %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be equal %s", fieldNameKey, errorMessage)
 			case "nefield":
-				fieldErrors[identifier] = fmt.Sprintf("%s must not be equal %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must not be equal %s", fieldNameKey, errorMessage)
 			case "eqcsfield":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be equal %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be equal %s", fieldNameKey, errorMessage)
 			case "necsfield":
-				fieldErrors[identifier] = fmt.Sprintf("%s must not be equal %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must not be equal %s", fieldNameKey, errorMessage)
 			case "unique":
-				fieldErrors[identifier] = fmt.Sprintf("%s is already exists", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s is already exists", fieldNameKey)
 			case "uuid4":
-				fieldErrors[identifier] = fmt.Sprintf("%s is not valid uuid", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s is not valid uuid", fieldNameKey)
 			case "uuid":
-				fieldErrors[identifier] = fmt.Sprintf("%s is not valid uuid", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s is not valid uuid", fieldNameKey)
 			case "numeric":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be numeric", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be numeric", fieldNameKey)
 			case "alpha":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be alpha", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be alpha", fieldNameKey)
 			case "alphanum":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be alphanumeric", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be alphanumeric", fieldNameKey)
 			case "alphanumunicode":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be alphanumeric unicode", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be alphanumeric unicode", fieldNameKey)
 			case "alphaunicode":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be alpha unicode", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be alpha unicode", fieldNameKey)
 			case "ascii":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be ascii", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be ascii", fieldNameKey)
 			case "contains":
-				fieldErrors[identifier] = fmt.Sprintf("%s must contain %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must contain %s", fieldNameKey, errorMessage)
 			case "containsany":
-				fieldErrors[identifier] = fmt.Sprintf("%s must contain any %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must contain any %s", fieldNameKey, errorMessage)
 			case "containsrune":
-				fieldErrors[identifier] = fmt.Sprintf("%s must contain %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must contain %s", fieldNameKey, errorMessage)
 			case "excludes":
-				fieldErrors[identifier] = fmt.Sprintf("%s must exclude %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must exclude %s", fieldNameKey, errorMessage)
 			case "excludesall":
-				fieldErrors[identifier] = fmt.Sprintf("%s must exclude all %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must exclude all %s", fieldNameKey, errorMessage)
 			case "excludesrune":
-				fieldErrors[identifier] = fmt.Sprintf("%s must exclude %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must exclude %s", fieldNameKey, errorMessage)
 			case "startswith":
-				fieldErrors[identifier] = fmt.Sprintf("%s must start with %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must start with %s", fieldNameKey, errorMessage)
 			case "endswith":
-				fieldErrors[identifier] = fmt.Sprintf("%s must end with %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must end with %s", fieldNameKey, errorMessage)
 			case "customDate":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be in format dd/mm/yyyy", identifier)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be in format dd/mm/yyyy", fieldNameKey)
 			case "currency":
-				fieldErrors[identifier] = fmt.Sprintf("%s must be valid currency (%s)", identifier, Implode(ValidCurrencies, ","))
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be valid currency (%s)", fieldNameKey, Implode(ValidCurrencies, ","))
 			default:
-				fieldErrors[identifier] = fmt.Sprintf("%s is %s", identifier, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s is %s", fieldNameKey, errorMessage)
 			}
 		}
 
@@ -144,6 +145,19 @@ func ExtractFieldNameFromError(errorMessage string) (fieldErrorsReturn map[strin
 	}
 
 	return fieldErrors, boolReturn
+}
+
+func getJSONTagName(t reflect.Type, fieldName string) string {
+	field, _ := t.FieldByName(fieldName)
+	tag := field.Tag.Get("json")
+	if tag == "" {
+		if tagParts := strings.Split(field.Tag.Get("form"), ","); len(tagParts) > 0 {
+			return tagParts[0]
+		}
+		return fieldName
+	}
+	tagParts := strings.Split(tag, ",")
+	return tagParts[0]
 }
 
 func ReturnJSON(ctx *gin.Context, code int, message string, data interface{}) {

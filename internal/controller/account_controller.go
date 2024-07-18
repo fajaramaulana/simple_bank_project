@@ -35,8 +35,8 @@ func NewAccountController(accountService *service.AccountService) *AccountContro
 func (a *AccountController) CreateAccount(ctx *gin.Context) {
 	var request request.CreateAccountRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		message, data := helper.GlobalCheckingErrorBindJson(err.Error())
-		log.Printf("Error: %s", message)
+		message, data := helper.GlobalCheckingErrorBindJson(err.Error(), request)
+		log.Printf("Error Bind: %s", message)
 		helper.ReturnJSONError(ctx, http.StatusBadRequest, message, nil, data)
 		return
 	}
@@ -75,7 +75,7 @@ func (a *AccountController) GetAccount(ctx *gin.Context) {
 	var req request.GetAccountRequest
 
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		message, data := helper.GlobalCheckingErrorBindJson(err.Error())
+		message, data := helper.GlobalCheckingErrorBindJson(err.Error(), req)
 		log.Printf("Error: %s", message)
 		helper.ReturnJSONError(ctx, http.StatusBadRequest, message, nil, data)
 		return
@@ -125,7 +125,7 @@ func (a *AccountController) GetAccounts(ctx *gin.Context) {
 	var req request.ListAccountRequest
 
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		message, data := helper.GlobalCheckingErrorBindJson(err.Error())
+		message, data := helper.GlobalCheckingErrorBindJson(err.Error(), req)
 		log.Printf("Error: %s", message)
 		helper.ReturnJSONError(ctx, http.StatusBadRequest, message, nil, data)
 		return
@@ -167,7 +167,7 @@ func (a *AccountController) UpdateAccount(ctx *gin.Context) {
 	var req request.GetAccountRequest
 
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		message, data := helper.GlobalCheckingErrorBindJson(err.Error())
+		message, data := helper.GlobalCheckingErrorBindJson(err.Error(), req)
 		log.Printf("Error: %s", message)
 		helper.ReturnJSONError(ctx, http.StatusBadRequest, message, nil, data)
 		return
@@ -183,7 +183,7 @@ func (a *AccountController) UpdateAccount(ctx *gin.Context) {
 
 	var request request.UpdateAccountRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		message, data := helper.GlobalCheckingErrorBindJson(err.Error())
+		message, data := helper.GlobalCheckingErrorBindJson(err.Error(), req)
 		log.Printf("Error: %s", message)
 		helper.ReturnJSONError(ctx, http.StatusBadRequest, message, nil, data)
 		return
