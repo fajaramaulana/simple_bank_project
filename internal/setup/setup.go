@@ -60,11 +60,14 @@ func InitializeAndStartApp() {
 	accountController := controller.NewAccountController(accountService)
 
 	// transfer
-
 	transferService := service.NewTransactionService(store)
 	transferController := controller.NewTransactionController(transferService)
 
-	server := router.NewRouter(accountController, transferController)
+	// user
+	userService := service.NewUserService(store)
+	userController := controller.NewUserController(userService)
+
+	server := router.NewRouter(accountController, transferController, userController)
 
 	server.SetupRouter()
 

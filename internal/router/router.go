@@ -12,13 +12,15 @@ type Router struct {
 	Engine      *gin.Engine
 	account     *controller.AccountController
 	transaction *controller.TransactionController
+	user        *controller.UserController
 }
 
-func NewRouter(account *controller.AccountController, transaction *controller.TransactionController) *Router {
+func NewRouter(account *controller.AccountController, transaction *controller.TransactionController, user *controller.UserController) *Router {
 	return &Router{
 		Engine:      gin.Default(),
 		account:     account,
 		transaction: transaction,
+		user:        user,
 	}
 }
 
@@ -43,7 +45,11 @@ func (r *Router) SetupRouter() {
 	v1.GET("/accounts", r.account.GetAccounts)
 	v1.PUT("/account/:uuid", r.account.UpdateAccount)
 
+	// transaction
 	v1.POST("/transaction", r.transaction.CreateTransfer)
+
+	// user
+	v1.POST("/user", r.user.CreateUser)
 }
 
 // StartServer starts the HTTP server on the specified port.
