@@ -44,4 +44,4 @@ ALTER TABLE "transactions" ADD FOREIGN KEY ("to_account_id") REFERENCES "account
 CREATE INDEX ON "accounts" ("user_uuid");
 
 -- CREATE UNIQUE INDEX ON "accounts" ("owner", "currency");
-ALTER TABLE "accounts" ADD CONSTRAINT "owner_currency_key" UNIQUE ("owner", "currency");
+ALTER TABLE "accounts" ADD CONSTRAINT "owner_currency_key" UNIQUE ("user_uuid", "currency");
