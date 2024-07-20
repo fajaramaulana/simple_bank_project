@@ -24,7 +24,6 @@ func (u *UserService) CreateUser(ctx context.Context, request *request.CreateUse
 	// check if user already exists
 	user, err := u.db.GetUserByEmail(ctx, request.Email)
 	if err != nil {
-
 		if err.Error() != "sql: no rows in result set" {
 			return response.UserResponseCreate{
 				Email: user.Email,

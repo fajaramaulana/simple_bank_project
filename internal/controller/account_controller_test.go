@@ -239,6 +239,7 @@ func TestGetAccountsController(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a mock Gin engine
+			fmt.Printf("%# v\n", tc.name)
 			router := gin.New()
 
 			// Create a mock controller
