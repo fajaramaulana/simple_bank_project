@@ -16,7 +16,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func checkingEnv() {
+func CheckingEnv() {
 	// checking if already have .env file
 	envPath := filepath.Join("/home/fajar/go_app/simplebankproject", ".env")
 	err := godotenv.Load(envPath)
@@ -50,7 +50,7 @@ func dbConnection() *sql.DB {
 }
 
 func InitializeAndStartApp() {
-	checkingEnv()
+	CheckingEnv()
 	// / Get environment variables
 	conn := dbConnection()
 	store := db.NewStore(conn)

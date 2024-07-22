@@ -13,6 +13,7 @@ import (
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/controller"
 	"github.com/fajaramaulana/simple_bank_project/internal/service"
+	"github.com/fajaramaulana/simple_bank_project/internal/setup"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -160,6 +161,7 @@ func TestAuthController_Login(t *testing.T) {
 			tt.mockSetup(store)
 
 			// config token
+			setup.CheckingEnv()
 			configToken := map[string]string{
 				"token_secret":          os.Getenv("TOKEN_SYMMETRIC_KEY"),
 				"access_token_duration": os.Getenv("ACCESS_TOKEN_DURATION"),

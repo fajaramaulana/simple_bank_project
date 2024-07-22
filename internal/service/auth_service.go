@@ -40,7 +40,6 @@ func (a *AuthService) Login(ctx context.Context, username, password string) (res
 
 	// check password
 	err = util.CheckPasswordBcrypt(password, detailLogin.HashedPassword)
-	fmt.Printf("%# v\n", err)
 	if err != nil {
 		return response.AuthLoginResponse{}, ErrorInvalidPassword
 	}
