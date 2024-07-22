@@ -28,7 +28,7 @@ func CheckingEnv() {
 	}
 }
 
-func dbConnection() *sql.DB {
+func DbConnection() *sql.DB {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
@@ -52,7 +52,7 @@ func dbConnection() *sql.DB {
 func InitializeAndStartApp() {
 	CheckingEnv()
 	// / Get environment variables
-	conn := dbConnection()
+	conn := DbConnection()
 	store := db.NewStore(conn)
 
 	// configToken
@@ -85,4 +85,39 @@ func InitializeAndStartApp() {
 
 	PORT := os.Getenv("PORT")
 	server.StartServer(PORT)
+}
+
+func InitializeAndStartAppTest() *router.Router {
+	CheckingEnv()
+	// / Get environment variables
+	conn := DbConnection()
+	store := db.NewStore(conn)
+
+	// configToken
+	configToken := map[string]string{
+		"token_secret":          os.Getenv("TOKEN_SYMMETRIC_KEY"),
+		"access_token_duration": os.Getenv("ACCESS_TOKEN_DURATION"),
+	}
+	// account
+	accountService := service.NewAccountService(store)
+	accountController := controller.NewAccountController(accountService)
+
+	// transfer
+	transferService := service.NewTransactionService(store)
+	transferController := controller.NewTransactionController(transferService)
+
+	// user
+	userService := service.NewUserService(store)
+	userController := controller.NewUserController(userService)
+
+	// auth
+	authService := service.NewAuthService(store, configToken)
+	authController := controller.NewAuthController(authService)
+
+	server, err := router.NewRouter(accountController, transferController, userController, authController, configToken)
+	if err != nil {
+		log.Fatal("Cannot create router: ", err)
+	}
+
+	return server
 }

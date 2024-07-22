@@ -17,7 +17,7 @@ type Router struct {
 	transaction *controller.TransactionController
 	user        *controller.UserController
 	auth        *controller.AuthController
-	tokenMaker  token.Maker
+	TokenMaker  token.Maker
 }
 
 func NewRouter(account *controller.AccountController, transaction *controller.TransactionController, user *controller.UserController, auth *controller.AuthController, configToken map[string]string) (*Router, error) {
@@ -25,24 +25,29 @@ func NewRouter(account *controller.AccountController, transaction *controller.Tr
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
-	return &Router{
+	router := &Router{
 		Engine:      gin.Default(),
 		account:     account,
 		transaction: transaction,
 		user:        user,
 		auth:        auth,
-		tokenMaker:  tokenMaker,
-	}, nil
-}
-
-// SetupRouter sets up the router for the application.
-func (r *Router) SetupRouter() {
-	v1 := r.Engine.Group("/api/v1")
+		TokenMaker:  tokenMaker,
+	}
 
 	// Register custom validator
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", helper.CurrencyValidator)
 	}
+
+	router.SetupRouter()
+	return router, nil
+}
+
+// SetupRouter sets up the router for the application.
+func (r *Router) SetupRouter() {
+	router := gin.Default()
+
+	v1 := router.Group("/api/v1")
 
 	v1.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -64,6 +69,8 @@ func (r *Router) SetupRouter() {
 
 	// auth
 	v1.POST("/auth/login", r.auth.Login)
+
+	r.Engine = router
 }
 
 // StartServer starts the HTTP server on the specified port.
