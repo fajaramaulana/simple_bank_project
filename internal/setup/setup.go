@@ -67,7 +67,17 @@ func InitializeAndStartApp() {
 	userService := service.NewUserService(store)
 	userController := controller.NewUserController(userService)
 
-	server := router.NewRouter(accountController, transferController, userController)
+	// configToken
+
+	configToken := map[string]string{
+		"token_secret":          os.Getenv("TOKEN_SYMMETRIC_KEY"),
+		"access_token_duration": os.Getenv("ACCESS_TOKEN_DURATION"),
+	}
+
+	server, err := router.NewRouter(accountController, transferController, userController, configToken)
+	if err != nil {
+		log.Fatal("Cannot create router: ", err)
+	}
 
 	server.SetupRouter()
 
