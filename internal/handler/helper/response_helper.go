@@ -48,6 +48,8 @@ func ExtractFieldNameFromError(errorMessage string, request interface{}) (fieldE
 			identifier := fieldName
 			fieldNameKey := getJSONTagName(reflect.TypeOf(request), identifier)
 
+			valueValidation := getValueFromTag(reflect.TypeOf(request), identifier, errorMessage)
+
 			// Store the error message in the map using the identifier as the key
 			switch errorMessage {
 			case "required":
@@ -63,9 +65,9 @@ func ExtractFieldNameFromError(errorMessage string, request interface{}) (fieldE
 			case "lte": // less than or equal
 				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be less than or equal %s", fieldNameKey, errorMessage)
 			case "max": // max length
-				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be less than %s characters", fieldNameKey, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be less than %s characters", fieldNameKey, valueValidation)
 			case "min": // min length
-				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be greater than %s characters", fieldNameKey, errorMessage)
+				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be greater than %s characters", fieldNameKey, valueValidation)
 			case "email":
 				fieldErrors[fieldNameKey] = fmt.Sprintf("%s must be a valid email", fieldNameKey)
 			case "eqfield":
@@ -158,6 +160,29 @@ func getJSONTagName(t reflect.Type, fieldName string) string {
 	}
 	tagParts := strings.Split(tag, ",")
 	return tagParts[0]
+}
+
+func getValueFromTag(t reflect.Type, fieldName string, key string) string {
+	field, _ := t.FieldByName(fieldName)
+	tag := field.Tag.Get("binding")
+
+	if tag != "" {
+		valueValidation := getValueValidation(tag, key)
+		return key + " " + valueValidation
+	}
+
+	return ""
+}
+
+func getValueValidation(data string, key string) string {
+	parts := strings.Split(data, ",")
+	prefix := key + "="
+	for _, part := range parts {
+		if strings.HasPrefix(part, prefix) {
+			return strings.TrimPrefix(part, prefix)
+		}
+	}
+	return ""
 }
 
 func ReturnJSON(ctx *gin.Context, code int, message string, data interface{}) {
