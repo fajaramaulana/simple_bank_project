@@ -234,3 +234,18 @@ func ReturnJSONWithMetaPage(ctx *gin.Context, code int, message string, data int
 
 	ctx.JSON(code, response)
 }
+
+func ReturnJSONAbort(ctx *gin.Context, code int, message string, data interface{}) {
+	meta := response.Meta{
+		Code:    code,
+		Status:  http.StatusText(code),
+		Message: message,
+	}
+
+	response := response.Response{
+		Meta: meta,
+		Data: data,
+	}
+
+	ctx.AbortWithStatusJSON(code, response)
+}
