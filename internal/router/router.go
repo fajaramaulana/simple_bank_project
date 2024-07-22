@@ -16,10 +16,11 @@ type Router struct {
 	account     *controller.AccountController
 	transaction *controller.TransactionController
 	user        *controller.UserController
+	auth        *controller.AuthController
 	tokenMaker  token.Maker
 }
 
-func NewRouter(account *controller.AccountController, transaction *controller.TransactionController, user *controller.UserController, configToken map[string]string) (*Router, error) {
+func NewRouter(account *controller.AccountController, transaction *controller.TransactionController, user *controller.UserController, auth *controller.AuthController, configToken map[string]string) (*Router, error) {
 	tokenMaker, err := token.NewPasetoMaker(configToken["token_secret"])
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
@@ -29,6 +30,7 @@ func NewRouter(account *controller.AccountController, transaction *controller.Tr
 		account:     account,
 		transaction: transaction,
 		user:        user,
+		auth:        auth,
 		tokenMaker:  tokenMaker,
 	}, nil
 }
@@ -59,6 +61,9 @@ func (r *Router) SetupRouter() {
 
 	// user
 	v1.POST("/user", r.user.CreateUser)
+
+	// auth
+	v1.POST("/auth/login", r.auth.Login)
 }
 
 // StartServer starts the HTTP server on the specified port.

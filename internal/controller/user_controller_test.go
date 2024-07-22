@@ -282,5 +282,19 @@ func randomUser(t *testing.T) db.CreateUserParams {
 	}
 
 	return user
+}
 
+func randomUser2(t *testing.T) (db.GetDetailLoginByUsernameRow, string) {
+	password := "Password123!"
+	passHash, err := util.MakePasswordBcrypt(password)
+
+	require.NoError(t, err)
+	user := db.GetDetailLoginByUsernameRow{
+		Username:       util.RandomUsername(),
+		Email:          util.RandomEmail(),
+		FullName:       util.RandomName(),
+		HashedPassword: passHash,
+	}
+
+	return user, password
 }
