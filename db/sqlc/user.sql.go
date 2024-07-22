@@ -50,6 +50,37 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
+const getDetailLoginByUsername = `-- name: GetDetailLoginByUsername :one
+SELECT hashed_password, user_uuid, role, username, email, full_name
+FROM users
+WHERE deleted_at = '0001-01-01 00:00:00+00'
+AND username = $1
+LIMIT 1
+`
+
+type GetDetailLoginByUsernameRow struct {
+	HashedPassword string    `json:"hashed_password"`
+	UserUuid       uuid.UUID `json:"user_uuid"`
+	Role           string    `json:"role"`
+	Username       string    `json:"username"`
+	Email          string    `json:"email"`
+	FullName       string    `json:"full_name"`
+}
+
+func (q *Queries) GetDetailLoginByUsername(ctx context.Context, username string) (GetDetailLoginByUsernameRow, error) {
+	row := q.db.QueryRowContext(ctx, getDetailLoginByUsername, username)
+	var i GetDetailLoginByUsernameRow
+	err := row.Scan(
+		&i.HashedPassword,
+		&i.UserUuid,
+		&i.Role,
+		&i.Username,
+		&i.Email,
+		&i.FullName,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT  user_uuid
        ,username
