@@ -9,6 +9,8 @@ import (
 	"github.com/go-faker/faker/v4"
 )
 
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
 func NewRandomMoneyGenerator() *rand.Rand {
 	seed := rand.NewSource(time.Now().UnixNano())
 	return rand.New(seed)
@@ -50,4 +52,18 @@ func RandomEmail() string {
 
 func RandomWord() string {
 	return faker.Word()
+}
+
+func RandomString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
+func RandomRole() string {
+	// random only USD EUR IDR
+	role := []string{"cusomer", "admin", "superadmin"}
+	return role[rand.Intn(len(role))]
 }
