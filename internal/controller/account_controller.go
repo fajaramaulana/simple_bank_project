@@ -6,7 +6,9 @@ import (
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/middleware"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -25,13 +27,11 @@ func NewAccountController(accountService *service.AccountService) *AccountContro
 }
 
 // CreateAccount creates a new account based on the provided JSON request.
-// It first binds the JSON request to the CreateAccountRequest struct.
-// If there is an error in binding the JSON, it returns a JSON error response with the error message and data.
-// Next, it performs validation on the request data. If there are validation errors, it returns a JSON error response with the validation errors.
-// If the request data is valid, it calls the accountService's CreateAccount method to create the account.
-// If there is an error in creating the account, it returns a JSON error response with the error message.
-// If the account already exists, it returns a JSON error response indicating that the account already exists.
-// If the account is created successfully, it returns a JSON response with the status code 201 and the created account.
+// It binds the JSON request to the CreateAccountRequest struct and performs validation.
+// If the request is invalid, it returns a JSON error response with the validation errors.
+// If the request is valid, it creates a new account using the accountService and returns a JSON response with the created account.
+// If there is an error during the account creation process, it returns a JSON error response with the appropriate error message.
+// If the account already exists, it returns a JSON error response indicating that an account with the same currency already exists.
 func (a *AccountController) CreateAccount(ctx *gin.Context) {
 	var request request.CreateAccountRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
@@ -41,6 +41,7 @@ func (a *AccountController) CreateAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(middleware.AuthorizationPayloadKey).(*token.Payload)
 	res := helper.DoValidation(&request)
 
 	if len(res) > 0 {
@@ -49,7 +50,7 @@ func (a *AccountController) CreateAccount(ctx *gin.Context) {
 		return
 	}
 
-	account, err := a.accountService.CreateAccount(ctx.Request.Context(), &request)
+	account, err := a.accountService.CreateAccount(ctx.Request.Context(), &request, authPayload)
 
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
@@ -70,14 +71,13 @@ func (a *AccountController) CreateAccount(ctx *gin.Context) {
 	helper.ReturnJSON(ctx, http.StatusCreated, "Account created", account)
 }
 
-// GetAccount retrieves an account based on the provided UUID.
-// It expects the UUID to be passed as a parameter in the request URI.
-// If the UUID is invalid or the account is not found, appropriate error responses are returned.
-// If the account is found, it is returned as a JSON response with a success status code.
+// GetAccount retrieves an account based on the provided UUID from the request context.
+// It handles the binding of the URI parameters, converts the UUID to the appropriate format,
+// and performs authorization checks before retrieving the account.
+// If the account is found, it returns a JSON response with the account details.
+// If any errors occur during the process, appropriate error responses are returned.
 func (a *AccountController) GetAccount(ctx *gin.Context) {
-	// uuid := ctx.Param("uuid")
 	var req request.GetAccountRequest
-
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		message, data := helper.GlobalCheckingErrorBindJson(err.Error(), req)
 		log.Printf("Error: %s", message)
@@ -93,9 +93,19 @@ func (a *AccountController) GetAccount(ctx *gin.Context) {
 		return
 	}
 
-	account, err := a.accountService.GetAccountByUUID(ctx.Request.Context(), uuidAcc)
+	authPayload := ctx.MustGet(middleware.AuthorizationPayloadKey).(*token.Payload)
 
+	account, err := a.accountService.GetAccountByUUID(ctx.Request.Context(), uuidAcc, authPayload)
 	if err != nil {
+		if err.Error() == "unauthorized" {
+			log.Println("Error: Unauthorized")
+			helper.ReturnJSONError(ctx, http.StatusUnauthorized, "Unauthorized", nil, nil)
+			return
+		} else if err.Error() == "sql: no rows in result set" {
+			log.Println("Error: Data not found")
+			helper.ReturnJSONError(ctx, http.StatusNotFound, "Data not found", nil, nil)
+			return
+		}
 		log.Printf("Error: %s", err.Error())
 		helper.ReturnJSONError(ctx, http.StatusInternalServerError, "Internal server error", nil, nil)
 		return
@@ -140,7 +150,9 @@ func (a *AccountController) GetAccounts(ctx *gin.Context) {
 		Offset: (req.Page - 1) * req.Limit,
 	}
 
-	accounts, totalData, err := a.accountService.ListAccount(ctx.Request.Context(), param)
+	authPayload := ctx.MustGet(middleware.AuthorizationPayloadKey).(*token.Payload)
+
+	accounts, totalData, err := a.accountService.ListAccount(ctx.Request.Context(), param, authPayload)
 
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
@@ -208,9 +220,22 @@ func (a *AccountController) UpdateAccount(ctx *gin.Context) {
 		Status:      int16(request.Status),
 	}
 
-	account, err := a.accountService.UpdateAccount(ctx.Request.Context(), arg)
+	authPayload := ctx.MustGet(middleware.AuthorizationPayloadKey).(*token.Payload)
+	account, err := a.accountService.UpdateAccount(ctx.Request.Context(), arg, authPayload)
 
 	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			log.Println("Error: Data not found")
+			helper.ReturnJSONError(ctx, http.StatusNotFound, "Data not found", nil, nil)
+			return
+		}
+
+		if err.Error() == "unauthorized" {
+			log.Println("Error: Unauthorized")
+			helper.ReturnJSONError(ctx, http.StatusUnauthorized, "Unauthorized", nil, nil)
+			return
+		}
+
 		log.Printf("Error: %s", err.Error())
 		helper.ReturnJSONError(ctx, http.StatusInternalServerError, "Internal server error", nil, nil)
 		return

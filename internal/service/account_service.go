@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/response"
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
 	"github.com/google/uuid"
 )
 
@@ -20,12 +21,13 @@ func NewAccountService(db db.Store) *AccountService {
 	}
 }
 
-func (a *AccountService) CreateAccount(ctx context.Context, request *request.CreateAccountRequest) (response.AccountResponseCreate, error) {
-	// convert req.uuseruuid to uuid
-	useruuid, err := helper.ConvertStringToUUID(request.UserUUID)
-	if err != nil {
-		return response.AccountResponseCreate{}, err
-	}
+// CreateAccount creates a new account for the authenticated user.
+// It takes the context, a CreateAccountRequest object containing the account details,
+// and the authentication payload as input parameters.
+// It returns an AccountResponseCreate object containing the created account details,
+// or an error if the account creation fails.
+func (a *AccountService) CreateAccount(ctx context.Context, request *request.CreateAccountRequest, authPayload *token.Payload) (response.AccountResponseCreate, error) {
+	useruuid := authPayload.UserUUID
 
 	// check if user already exists
 	user, err := a.db.GetUserByUserUUID(ctx, useruuid)
@@ -52,7 +54,7 @@ func (a *AccountService) CreateAccount(ctx context.Context, request *request.Cre
 	}
 	// create account
 	account, err := a.db.CreateAccount(ctx, db.CreateAccountParams{
-		Owner:    request.Owner,
+		Owner:    user.FullName,
 		Currency: request.Currency,
 		Balance:  "0",
 		UserUuid: useruuid,
@@ -78,21 +80,24 @@ func (a *AccountService) CreateAccount(ctx context.Context, request *request.Cre
 	return result, nil
 }
 
-func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID) (response.AccountResponseGet, error) {
+func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID, authPayload *token.Payload) (response.AccountResponseGet, error) {
 	account, err := a.db.GetAccountByUUID(ctx, uuid)
-
 	if err != nil {
-		if err.Error() != "sql: no rows in result set" {
-			return response.AccountResponseGet{}, err
-		}
+		// if err.Error() != "sql: no rows in result set" {
+		return response.AccountResponseGet{}, err
+		// }
 
+	}
+
+	if account.UserUuid != authPayload.UserUUID {
+		return response.AccountResponseGet{}, errors.New("unauthorized")
 	}
 
 	user, err := a.db.GetUserByUserUUID(ctx, account.UserUuid)
 	if err != nil {
-		if err.Error() != "sql: no rows in result set" {
-			return response.AccountResponseGet{}, err
-		}
+		// if err.Error() != "sql: no rows in result set" {
+		return response.AccountResponseGet{}, err
+		// }
 	}
 
 	result := response.AccountResponseGet{
@@ -113,41 +118,97 @@ func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID) (
 	return result, nil
 }
 
-func (a *AccountService) ListAccount(ctx context.Context, param db.ListAccountsParams) ([]response.AccountResponseGet, int64, error) {
-	accounts, err := a.db.ListAccounts(ctx, param)
-	if err != nil {
-		return nil, 0, err
+func (a *AccountService) ListAccount(ctx context.Context, param db.ListAccountsParams, authPayload *token.Payload) ([]response.AccountResponseGet, int64, error) {
+	// if role is admin or superadmin return all account
+	if authPayload.Role == "admin" || authPayload.Role == "superadmin" {
+		accounts, err := a.db.ListAccounts(ctx, param)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// count total Data
+		countTotal, err := a.db.CountAccounts(ctx)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		var result []response.AccountResponseGet
+		for _, account := range accounts {
+			// if i query to get user by useruuid here is n+1 problem
+			result = append(result, response.AccountResponseGet{
+				AccountUUID: account.AccountUuid,
+				Owner:       account.Owner,
+				Currency:    account.Currency,
+				Balance:     account.Balance,
+				CreatedAt:   account.CreatedAt,
+				Status:      int32(account.Status),
+				User: response.UserGetSimple{
+					UserUUID: account.UserUuid.String(),
+					Username: account.Username.String,
+					FullName: account.FullName.String,
+					Email:    account.Email.String,
+				},
+			})
+		}
+
+		return result, countTotal, nil
+	} else {
+
+		param := db.ListAccountsByUserUUIDParams{
+			UserUuid: authPayload.UserUUID,
+			Limit:    param.Limit,
+			Offset:   param.Offset,
+		}
+		accounts, err := a.db.ListAccountsByUserUUID(ctx, param)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// count total Data
+		countTotal, err := a.db.CountAccountsByUserUUID(ctx, authPayload.UserUUID)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		var result []response.AccountResponseGet
+		for _, account := range accounts {
+			// if i query to get user by useruuid here is n+1 problem
+			result = append(result, response.AccountResponseGet{
+				AccountUUID: account.AccountUuid,
+				Owner:       account.Owner,
+				Currency:    account.Currency,
+				Balance:     account.Balance,
+				CreatedAt:   account.CreatedAt,
+				Status:      int32(account.Status),
+				User: response.UserGetSimple{
+					UserUUID: account.UserUuid.String(),
+					Username: account.Username.String,
+					FullName: account.FullName.String,
+					Email:    account.Email.String,
+				},
+			})
+		}
+
+		return result, countTotal, nil
+
 	}
 
-	// count total Data
-	countTotal, err := a.db.CountAccounts(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var result []response.AccountResponseGet
-	for _, account := range accounts {
-		// if i query to get user by useruuid here is n+1 problem
-		result = append(result, response.AccountResponseGet{
-			AccountUUID: account.AccountUuid,
-			Owner:       account.Owner,
-			Currency:    account.Currency,
-			Balance:     account.Balance,
-			CreatedAt:   account.CreatedAt,
-			Status:      int32(account.Status),
-			User: response.UserGetSimple{
-				UserUUID: account.UserUuid.String(),
-				Username: account.Username.String,
-				FullName: account.FullName.String,
-				Email:    account.Email.String,
-			},
-		})
-	}
-
-	return result, countTotal, nil
 }
 
-func (a *AccountService) UpdateAccount(ctx context.Context, arg db.UpdateProfileAccountParams) (response.AccountResponseGet, error) {
+func (a *AccountService) UpdateAccount(ctx context.Context, arg db.UpdateProfileAccountParams, authPayload *token.Payload) (response.AccountResponseGet, error) {
+	// check if role is not admin or superadmin
+	if authPayload.Role != "admin" && authPayload.Role != "superadmin" {
+		// check if account is not owned by the user
+		account, err := a.db.GetAccountByUUID(ctx, arg.AccountUuid)
+		if err != nil {
+			return response.AccountResponseGet{}, err
+		}
+
+		if account.UserUuid != authPayload.UserUUID {
+			return response.AccountResponseGet{}, errors.New("unauthorized")
+		}
+	}
+
 	account, err := a.db.UpdateProfileAccount(ctx, arg)
 	if err != nil {
 		return response.AccountResponseGet{}, err
