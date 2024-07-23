@@ -298,3 +298,15 @@ func randomUser2(t *testing.T) (db.GetDetailLoginByUsernameRow, string) {
 
 	return user, password
 }
+
+func randomUser3() db.GetUserByUserUUIDRow {
+	user := db.GetUserByUserUUIDRow{
+		Username: util.RandomUsername(),
+		Email:    util.RandomEmail(),
+		FullName: util.RandomName(),
+		UserUuid: util.RandomUUID(),
+		Role:     util.RandomRole(),
+	}
+
+	return user
+}
