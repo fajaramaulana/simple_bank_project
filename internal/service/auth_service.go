@@ -56,7 +56,9 @@ func (a *AuthService) Login(ctx context.Context, username, password string) (res
 	}
 	duration := time.Minute * tokenDuration
 
-	token, _, err := maker.CreateToken(detailLogin.UserUuid.String(), duration)
+	role := detailLogin.Role
+
+	token, _, err := maker.CreateToken(detailLogin.UserUuid.String(), duration, role)
 	if err != nil {
 		return response.AuthLoginResponse{}, err
 	}
