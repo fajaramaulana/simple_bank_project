@@ -4,39 +4,30 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"testing"
+	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/controller"
 	"github.com/fajaramaulana/simple_bank_project/internal/router"
 	"github.com/fajaramaulana/simple_bank_project/internal/service"
-	"github.com/joho/godotenv"
+	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/stretchr/testify/require"
 
 	_ "github.com/lib/pq"
 )
 
-func CheckingEnv() {
-	// checking if already have .env file
-	envPath := filepath.Join("/home/fajar/go_app/simplebankproject", ".env")
-	err := godotenv.Load(envPath)
-	if err != nil {
-		// check if ENV already set
-		if os.Getenv("DB_USER") == "" {
-			log.Fatal("Error loading .env file")
-		}
-	}
+func CheckingEnv(config util.Config) util.Config {
+	return config
 }
 
-func DbConnection() *sql.DB {
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbName := os.Getenv("DB_NAME")
-	dbSSLMode := os.Getenv("DB_SSLMODE")
+func DbConnection(config util.Config) *sql.DB {
+	dbUser := config.DBUser
+	dbPassword := config.DBPassword
+	dbHost := config.DBHost
+	dbPort := config.DBPort
+	dbName := config.DBName
+	dbSSLMode := config.DBSSLMode
 
 	// Create the connection string
 	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
@@ -51,16 +42,15 @@ func DbConnection() *sql.DB {
 	return conn
 }
 
-func InitializeAndStartApp() {
-	CheckingEnv()
+func InitializeAndStartApp(config util.Config) {
 	// / Get environment variables
-	conn := DbConnection()
+	conn := DbConnection(config)
 	store := db.NewStore(conn)
 
 	// configToken
 	configToken := map[string]string{
-		"token_secret":          os.Getenv("TOKEN_SYMMETRIC_KEY"),
-		"access_token_duration": os.Getenv("ACCESS_TOKEN_DURATION"),
+		"token_secret":          config.TokenSymmetricKey,
+		"access_token_duration": config.AccessTokenDuration.String(),
 	}
 	// account
 	accountService := service.NewAccountService(store)
@@ -83,18 +73,17 @@ func InitializeAndStartApp() {
 		log.Fatal("Cannot create router: ", err)
 	}
 
-	PORT := os.Getenv("PORT")
+	PORT := config.Port
 	server.StartServer(PORT)
 }
 
 func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
 	// Check environment variables
-	CheckingEnv()
 
 	// Config token
 	configToken := map[string]string{
-		"token_secret":          os.Getenv("TOKEN_SYMMETRIC_KEY"),
-		"access_token_duration": os.Getenv("ACCESS_TOKEN_DURATION"),
+		"token_secret":          util.RandomString(32),
+		"access_token_duration": time.Minute.String(),
 	}
 
 	// Initialize services and controllers

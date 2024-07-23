@@ -1,6 +1,8 @@
 package controller_test
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"testing"
 
@@ -9,6 +11,7 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/internal/router"
 	"github.com/fajaramaulana/simple_bank_project/internal/service"
 	"github.com/fajaramaulana/simple_bank_project/internal/setup"
+	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )
@@ -25,13 +28,19 @@ func NewTestServer(t *testing.T, store db.Store) *router.Router {
 	// }
 
 	// server, err := routerNewServer(config, store)
-	setup.CheckingEnv()
+	config, err := util.LoadConfig(".")
+	if err != nil {
+		log.Fatal("Cannot load config: ", err)
+	}
+
+	configEnv := setup.CheckingEnv(config)
 
 	// configToken
 	configToken := map[string]string{
-		"token_secret":          os.Getenv("TOKEN_SYMMETRIC_KEY"),
-		"access_token_duration": os.Getenv("ACCESS_TOKEN_DURATION"),
+		"token_secret":          configEnv.TokenSymmetricKey,
+		"access_token_duration": configEnv.AccessTokenDuration.String(),
 	}
+	fmt.Printf("%# v\n", configToken)
 	// account
 	accountService := service.NewAccountService(store)
 	accountController := controller.NewAccountController(accountService)
