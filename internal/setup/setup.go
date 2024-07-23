@@ -6,12 +6,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"testing"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/controller"
 	"github.com/fajaramaulana/simple_bank_project/internal/router"
 	"github.com/fajaramaulana/simple_bank_project/internal/service"
 	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/require"
 
 	_ "github.com/lib/pq"
 )
@@ -81,43 +83,36 @@ func InitializeAndStartApp() {
 		log.Fatal("Cannot create router: ", err)
 	}
 
-	server.SetupRouter()
-
 	PORT := os.Getenv("PORT")
 	server.StartServer(PORT)
 }
 
-func InitializeAndStartAppTest() *router.Router {
+func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
+	// Check environment variables
 	CheckingEnv()
-	// / Get environment variables
-	conn := DbConnection()
-	store := db.NewStore(conn)
 
-	// configToken
+	// Config token
 	configToken := map[string]string{
 		"token_secret":          os.Getenv("TOKEN_SYMMETRIC_KEY"),
 		"access_token_duration": os.Getenv("ACCESS_TOKEN_DURATION"),
 	}
-	// account
+
+	// Initialize services and controllers
 	accountService := service.NewAccountService(store)
 	accountController := controller.NewAccountController(accountService)
 
-	// transfer
 	transferService := service.NewTransactionService(store)
 	transferController := controller.NewTransactionController(transferService)
 
-	// user
 	userService := service.NewUserService(store)
 	userController := controller.NewUserController(userService)
 
-	// auth
 	authService := service.NewAuthService(store, configToken)
 	authController := controller.NewAuthController(authService)
 
+	// Create router
 	server, err := router.NewRouter(accountController, transferController, userController, authController, configToken)
-	if err != nil {
-		log.Fatal("Cannot create router: ", err)
-	}
+	require.NoError(t, err)
 
 	return server
 }

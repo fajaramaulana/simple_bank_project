@@ -22,9 +22,6 @@ type Router struct {
 }
 
 // NewRouter creates a new instance of the Router struct and initializes its dependencies.
-// It takes an AccountController, TransactionController, UserController, AuthController,
-// and a map of configuration tokens as parameters. It returns a pointer to the Router
-// struct and an error if there was an issue creating the token maker.
 func NewRouter(account *controller.AccountController, transaction *controller.TransactionController, user *controller.UserController, auth *controller.AuthController, configToken map[string]string) (*Router, error) {
 	tokenMaker, err := token.NewPasetoMaker(configToken["token_secret"])
 	if err != nil {
@@ -50,9 +47,7 @@ func NewRouter(account *controller.AccountController, transaction *controller.Tr
 
 // SetupRouter sets up the router for the application.
 func (r *Router) SetupRouter() {
-	router := gin.Default()
-
-	v1 := router.Group("/api/v1")
+	v1 := r.Engine.Group("/api/v1")
 
 	v1.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -63,7 +58,7 @@ func (r *Router) SetupRouter() {
 	// auth
 	v1.POST("/auth/login", r.auth.Login)
 
-	authRoutesV1 := router.Group("/api/v1").Use(middleware.AuthMiddleware(r.TokenMaker))
+	authRoutesV1 := v1.Group("").Use(middleware.AuthMiddleware(r.TokenMaker))
 
 	// account
 	authRoutesV1.POST("/account", r.account.CreateAccount)
@@ -74,10 +69,8 @@ func (r *Router) SetupRouter() {
 	// transaction
 	authRoutesV1.POST("/transaction", r.transaction.CreateTransfer)
 
-	// user
 	authRoutesV1.POST("/user", r.user.CreateUser)
-
-	r.Engine = router
+	// user
 }
 
 // StartServer starts the HTTP server on the specified port.

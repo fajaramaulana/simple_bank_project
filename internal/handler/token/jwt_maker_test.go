@@ -26,7 +26,9 @@ func TestJWTMaker(t *testing.T) {
 	issuedAt := time.Now()
 	expiredAt := issuedAt.Add(duration)
 
-	token, payload, err := maker.CreateToken(uuidUser, duration)
+	role := util.RandomRole()
+
+	token, payload, err := maker.CreateToken(uuidUser, duration, role)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 	require.NotEmpty(t, payload)
@@ -52,7 +54,9 @@ func TestExpiredJWTToken(t *testing.T) {
 	// parse uuid to string
 	uuidUser := newRandomUUID.String()
 
-	tokenString, payload, err := maker.CreateToken(uuidUser, -time.Minute)
+	role := util.RandomRole()
+
+	tokenString, payload, err := maker.CreateToken(uuidUser, -time.Minute, role)
 	require.NoError(t, err)
 	require.NotEmpty(t, tokenString)
 	require.NotEmpty(t, payload)
@@ -71,7 +75,9 @@ func TestInvalidJWTTokenAlgNone(t *testing.T) {
 	// parse uuid to string
 	uuidUser := newRandomUUID.String()
 
-	payload, err := token.NewPayload(uuidUser, time.Minute)
+	role := util.RandomRole()
+
+	payload, err := token.NewPayload(uuidUser, time.Minute, role)
 	require.NoError(t, err)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodNone, payload)
@@ -97,7 +103,7 @@ func TestInvalidPayload(t *testing.T) {
 	_, err := token.NewJWTMaker(util.RandomString(32))
 	require.NoError(t, err)
 
-	_, err = token.NewPayload("wrong-uuid", time.Minute)
+	_, err = token.NewPayload("wrong-uuid", time.Minute, "customer")
 	require.Error(t, err)
 	require.EqualError(t, err, "invalid UUID length: 10")
 }

@@ -2,11 +2,16 @@ package middleware
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
+	"testing"
+	"time"
 
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -51,4 +56,43 @@ func AuthMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 		c.Set(AuthorizationPayloadKey, payload)
 		c.Next()
 	}
+}
+
+func AddAuthorizationTest(
+	t *testing.T,
+	request *http.Request,
+	tokenMaker token.Maker,
+	authorizationType string,
+	duration time.Duration,
+	role string,
+) {
+	uuidToken, err := uuid.NewRandom()
+	require.NoError(t, err)
+
+	uuidTokenString := uuidToken.String()
+
+	token, payload, err := tokenMaker.CreateToken(uuidTokenString, duration, role)
+	require.NoError(t, err)
+	require.NotEmpty(t, payload)
+
+	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, token)
+	request.Header.Set(AuthorizationHeaderKey, authorizationHeader)
+}
+
+func AddAuthorizationTestAPI(
+	t *testing.T,
+	request *http.Request,
+	tokenMaker token.Maker,
+	authorizationType string,
+	uuidTokenString string,
+	duration time.Duration,
+	role string,
+) {
+
+	token, payload, err := tokenMaker.CreateToken(uuidTokenString, duration, role)
+	require.NoError(t, err)
+	require.NotEmpty(t, payload)
+
+	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, token)
+	request.Header.Set(AuthorizationHeaderKey, authorizationHeader)
 }

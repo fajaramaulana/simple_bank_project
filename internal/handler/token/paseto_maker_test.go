@@ -25,7 +25,9 @@ func TestPasetoMaker(t *testing.T) {
 	issuedAt := time.Now()
 	expiredAt := issuedAt.Add(duration)
 
-	token, payload, err := maker.CreateToken(uuidUser, duration)
+	role := util.RandomRole()
+
+	token, payload, err := maker.CreateToken(uuidUser, duration, role)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 	require.NotEmpty(t, payload)
@@ -50,8 +52,9 @@ func TestExpiredPasetoToken(t *testing.T) {
 
 	// parse uuid to string
 	uuidUser := newRandomUUID.String()
+	role := util.RandomRole()
 
-	tokenString, payload, err := maker.CreateToken(uuidUser, -time.Minute)
+	tokenString, payload, err := maker.CreateToken(uuidUser, -time.Minute, role)
 	require.NoError(t, err)
 	require.NotEmpty(t, tokenString)
 	require.NotEmpty(t, payload)
@@ -73,7 +76,9 @@ func TestInvalidPayloadPaseto(t *testing.T) {
 	maker, err := token.NewPasetoMaker(util.RandomString(32))
 	require.NoError(t, err)
 
-	_, _, err = maker.CreateToken("test", time.Minute)
+	role := util.RandomRole()
+
+	_, _, err = maker.CreateToken("test", time.Minute, role)
 	require.Error(t, err)
 }
 

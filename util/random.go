@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-faker/faker/v4"
+	"github.com/google/uuid"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -66,4 +67,8 @@ func RandomRole() string {
 	// random only USD EUR IDR
 	role := []string{"cusomer", "admin", "superadmin"}
 	return role[rand.Intn(len(role))]
+}
+
+func RandomUUID() uuid.UUID {
+	return uuid.New()
 }
