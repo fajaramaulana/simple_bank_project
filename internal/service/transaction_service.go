@@ -3,12 +3,14 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/response"
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
 )
 
 type TransactionService struct {
@@ -21,20 +23,22 @@ func NewTransactionService(db db.Store) *TransactionService {
 	}
 }
 
-func (a *TransactionService) CreateTransferTrans(ctx context.Context, req *request.CreateTransferRequest) (response.SuccessTransactionResponse, error) {
-	// check if from account exists
-	// convert string to uuid
+func (a *TransactionService) CreateTransferTrans(ctx context.Context, req *request.CreateTransferRequest, authPayload *token.Payload) (response.SuccessTransactionResponse, error) {
 	fromAccountUUID, err := helper.ConvertStringToUUID(req.FromAccountUUID)
 	if err != nil {
-		return response.SuccessTransactionResponse{}, err
+		return response.SuccessTransactionResponse{}, fmt.Errorf("%w: from account uuid not valid", err)
 	}
 	dataFromAccount, err := a.db.GetAccountByUUID(ctx, fromAccountUUID)
 
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
-			err = errors.New("from account not found")
-		}
-		return response.SuccessTransactionResponse{}, err
+		return response.SuccessTransactionResponse{}, fmt.Errorf("%w: from account not found", err)
+	}
+
+	fmt.Printf("%# v\n", dataFromAccount.UserUuid.String())
+	fmt.Printf("%# v\n", authPayload.UserUUID.String())
+	// check if from account belongs to user
+	if dataFromAccount.UserUuid != authPayload.UserUUID {
+		return response.SuccessTransactionResponse{}, errors.New("unauthorized")
 	}
 	// end check if from account exists
 
@@ -42,16 +46,13 @@ func (a *TransactionService) CreateTransferTrans(ctx context.Context, req *reque
 	// convert string to uuid
 	toAccountUUID, err := helper.ConvertStringToUUID(req.ToAccountUUID)
 	if err != nil {
-		return response.SuccessTransactionResponse{}, err
+		return response.SuccessTransactionResponse{}, fmt.Errorf("%w: to account uuid not valid", err)
 	}
 
 	dataToAccount, err := a.db.GetAccountByUUID(ctx, toAccountUUID)
 
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
-			err = errors.New("to account not found")
-		}
-		return response.SuccessTransactionResponse{}, err
+		return response.SuccessTransactionResponse{}, fmt.Errorf("%w: to account not found", err)
 	}
 	// end check if to account exists
 
@@ -71,15 +72,15 @@ func (a *TransactionService) CreateTransferTrans(ctx context.Context, req *reque
 
 	// checking if currency same
 	if dataFromAccount.Currency != req.Currency {
-		return response.SuccessTransactionResponse{}, errors.New("currency not same")
+		return response.SuccessTransactionResponse{}, errors.New("currency from account not same")
 	}
 
 	if dataToAccount.Currency != req.Currency {
-		return response.SuccessTransactionResponse{}, errors.New("currency not same")
+		return response.SuccessTransactionResponse{}, errors.New("currency to account not same")
 	}
 
 	if dataFromAccount.Currency != dataToAccount.Currency {
-		return response.SuccessTransactionResponse{}, errors.New("currency not same")
+		return response.SuccessTransactionResponse{}, errors.New("both account currency not same")
 	}
 
 	// create transaction

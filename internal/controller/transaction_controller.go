@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/middleware"
 	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
+	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -38,10 +40,32 @@ func (tf *TransactionController) CreateTransfer(ctx *gin.Context) {
 		return
 	}
 
-	transfer, err := tf.transactionService.CreateTransferTrans(ctx.Request.Context(), &req)
+	authPayload := ctx.MustGet(middleware.AuthorizationPayloadKey).(*token.Payload)
+
+	transfer, err := tf.transactionService.CreateTransferTrans(ctx.Request.Context(), &req, authPayload)
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
-		helper.ReturnJSONError(ctx, http.StatusInternalServerError, "Internal server error", nil, nil)
+		if err.Error() == "sql: no rows in result set: from account not found" {
+			helper.ReturnJSONError(ctx, http.StatusNotFound, "from account not found", nil, nil)
+			return
+		}
+
+		if err.Error() == "sql: no rows in result set: to account not found" {
+			helper.ReturnJSONError(ctx, http.StatusNotFound, "to account not found", nil, nil)
+			return
+		}
+
+		if err.Error() == "unauthorized" {
+			helper.ReturnJSONError(ctx, http.StatusUnauthorized, "unauthorized", nil, nil)
+			return
+		}
+
+		if err.Error() == "balance not enough" {
+			helper.ReturnJSONError(ctx, http.StatusBadRequest, "balance not enough", nil, nil)
+			return
+		}
+
+		helper.ReturnJSONError(ctx, http.StatusInternalServerError, err.Error(), nil, nil)
 		return
 	}
 
