@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	AddAccountBalance(ctx context.Context, arg AddAccountBalanceParams) (AddAccountBalanceRow, error)
 	CountAccounts(ctx context.Context) (int64, error)
+	CountAccountsByUserUUID(ctx context.Context, userUuid uuid.UUID) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error)
 	CreateEntry(ctx context.Context, arg CreateEntryParams) (Entry, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
@@ -31,6 +32,7 @@ type Querier interface {
 	GetUserByUserUUID(ctx context.Context, userUuid uuid.UUID) (GetUserByUserUUIDRow, error)
 	GetUserByUsername(ctx context.Context, username string) (GetUserByUsernameRow, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
+	ListAccountsByUserUUID(ctx context.Context, arg ListAccountsByUserUUIDParams) ([]ListAccountsByUserUUIDRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]Entry, error)
 	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error)
 	SoftDeleteAccount(ctx context.Context, id int64) error

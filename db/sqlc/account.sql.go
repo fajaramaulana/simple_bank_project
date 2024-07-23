@@ -68,6 +68,18 @@ func (q *Queries) CountAccounts(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const countAccountsByUserUUID = `-- name: CountAccountsByUserUUID :one
+SELECT COUNT(*) FROM accounts
+WHERE deleted_at IS NULL AND user_uuid = $1
+`
+
+func (q *Queries) CountAccountsByUserUUID(ctx context.Context, userUuid uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAccountsByUserUUID, userUuid)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts (
   owner,
@@ -344,6 +356,74 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]L
 	items := []ListAccountsRow{}
 	for rows.Next() {
 		var i ListAccountsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Owner,
+			&i.Currency,
+			&i.Balance,
+			&i.UserUuid,
+			&i.CreatedAt,
+			&i.AccountUuid,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.Status,
+			&i.Email,
+			&i.FullName,
+			&i.Username,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAccountsByUserUUID = `-- name: ListAccountsByUserUUID :many
+SELECT accounts.id, owner, currency, balance, accounts.user_uuid, accounts.created_at, account_uuid, accounts.updated_at, accounts.deleted_at, status, u.email, u.full_name, u.username FROM accounts
+LEFT JOIN users u ON accounts.user_uuid = u.user_uuid
+WHERE accounts.deleted_at IS NULL AND accounts.user_uuid = $1
+ORDER BY accounts.id
+LIMIT $2
+OFFSET $3
+`
+
+type ListAccountsByUserUUIDParams struct {
+	UserUuid uuid.UUID `json:"user_uuid"`
+	Limit    int32     `json:"limit"`
+	Offset   int32     `json:"offset"`
+}
+
+type ListAccountsByUserUUIDRow struct {
+	ID          int64          `json:"id"`
+	Owner       string         `json:"owner"`
+	Currency    string         `json:"currency"`
+	Balance     string         `json:"balance"`
+	UserUuid    uuid.UUID      `json:"user_uuid"`
+	CreatedAt   time.Time      `json:"created_at"`
+	AccountUuid uuid.UUID      `json:"account_uuid"`
+	UpdatedAt   sql.NullTime   `json:"updated_at"`
+	DeletedAt   sql.NullTime   `json:"deleted_at"`
+	Status      int16          `json:"status"`
+	Email       sql.NullString `json:"email"`
+	FullName    sql.NullString `json:"full_name"`
+	Username    sql.NullString `json:"username"`
+}
+
+func (q *Queries) ListAccountsByUserUUID(ctx context.Context, arg ListAccountsByUserUUIDParams) ([]ListAccountsByUserUUIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAccountsByUserUUID, arg.UserUuid, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAccountsByUserUUIDRow{}
+	for rows.Next() {
+		var i ListAccountsByUserUUIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Owner,

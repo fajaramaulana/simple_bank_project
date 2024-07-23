@@ -42,6 +42,19 @@ OFFSET $2;
 SELECT COUNT(*) FROM accounts
 WHERE deleted_at IS NULL;
 
+-- name: ListAccountsByUserUUID :many
+SELECT accounts.id, owner, currency, balance, accounts.user_uuid, accounts.created_at, account_uuid, accounts.updated_at, accounts.deleted_at, status, u.email, u.full_name, u.username FROM accounts
+LEFT JOIN users u ON accounts.user_uuid = u.user_uuid
+WHERE accounts.deleted_at IS NULL AND accounts.user_uuid = $1
+ORDER BY accounts.id
+LIMIT $2
+OFFSET $3;
+
+-- name: CountAccountsByUserUUID :one
+SELECT COUNT(*) FROM accounts
+WHERE deleted_at IS NULL AND user_uuid = $1;
+
+
 -- name: UpdateAccount :one
 WITH updated_account AS (
     UPDATE accounts

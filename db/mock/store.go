@@ -72,6 +72,21 @@ func (mr *MockStoreMockRecorder) CountAccounts(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountAccounts", reflect.TypeOf((*MockStore)(nil).CountAccounts), arg0)
 }
 
+// CountAccountsByUserUUID mocks base method.
+func (m *MockStore) CountAccountsByUserUUID(arg0 context.Context, arg1 uuid.UUID) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountAccountsByUserUUID", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountAccountsByUserUUID indicates an expected call of CountAccountsByUserUUID.
+func (mr *MockStoreMockRecorder) CountAccountsByUserUUID(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountAccountsByUserUUID", reflect.TypeOf((*MockStore)(nil).CountAccountsByUserUUID), arg0, arg1)
+}
+
 // CreateAccount mocks base method.
 func (m *MockStore) CreateAccount(arg0 context.Context, arg1 db.CreateAccountParams) (db.CreateAccountRow, error) {
 	m.ctrl.T.Helper()
@@ -355,6 +370,21 @@ func (m *MockStore) ListAccounts(arg0 context.Context, arg1 db.ListAccountsParam
 func (mr *MockStoreMockRecorder) ListAccounts(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAccounts", reflect.TypeOf((*MockStore)(nil).ListAccounts), arg0, arg1)
+}
+
+// ListAccountsByUserUUID mocks base method.
+func (m *MockStore) ListAccountsByUserUUID(arg0 context.Context, arg1 db.ListAccountsByUserUUIDParams) ([]db.ListAccountsByUserUUIDRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAccountsByUserUUID", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListAccountsByUserUUIDRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAccountsByUserUUID indicates an expected call of ListAccountsByUserUUID.
+func (mr *MockStoreMockRecorder) ListAccountsByUserUUID(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAccountsByUserUUID", reflect.TypeOf((*MockStore)(nil).ListAccountsByUserUUID), arg0, arg1)
 }
 
 // ListEntries mocks base method.
