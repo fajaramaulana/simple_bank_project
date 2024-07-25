@@ -113,8 +113,9 @@ func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
 
 	// Config token
 	configToken := map[string]string{
-		"token_secret":          util.RandomString(32),
-		"access_token_duration": time.Minute.String(),
+		"token_secret":           util.RandomString(32),
+		"access_token_duration":  time.Minute.String(),
+		"refresh_token_duration": (15 * time.Minute).String(),
 	}
 
 	// Initialize services and controllers
