@@ -49,12 +49,11 @@ func (a *AuthService) Login(ctx context.Context, username, password string) (res
 	if err != nil {
 		return response.AuthLoginResponse{}, err
 	}
-
 	tokenDuration, err := time.ParseDuration(a.configToken["access_token_duration"])
 	if err != nil {
 		return response.AuthLoginResponse{}, err
 	}
-	duration := time.Minute * tokenDuration
+	duration := tokenDuration
 
 	role := detailLogin.Role
 
