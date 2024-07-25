@@ -22,12 +22,6 @@ func TestMain(m *testing.M) {
 }
 
 func NewTestServer(t *testing.T, store db.Store) *router.Router {
-	// config := util.Config{
-	// 	TokenSymmetricKey:   util.RandomString(32),
-	// 	AccessTokenDuration: time.Minute,
-	// }
-
-	// server, err := routerNewServer(config, store)
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal("Cannot load config: ", err)
@@ -37,8 +31,9 @@ func NewTestServer(t *testing.T, store db.Store) *router.Router {
 
 	// configToken
 	configToken := map[string]string{
-		"token_secret":          configEnv.TokenSymmetricKey,
-		"access_token_duration": configEnv.AccessTokenDuration.String(),
+		"token_secret":           configEnv.TokenSymmetricKey,
+		"access_token_duration":  configEnv.AccessTokenDuration.String(),
+		"refresh_token_duration": configEnv.RefreshTokenDuration.String(),
 	}
 	fmt.Printf("%# v\n", configToken)
 	// account
