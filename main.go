@@ -13,8 +13,10 @@ func main() {
 		log.Fatal("Cannot load config: ", err)
 	}
 
-	if config.Port == "" {
-		log.Fatal("env not load properly")
+	// Check if essential configuration values are set
+	if config.DBUser == "" || config.DBPassword == "" || config.DBName == "" {
+		log.Fatal("Environment variables are not properly loaded")
 	}
+
 	setup.InitializeAndStartApp(config)
 }
