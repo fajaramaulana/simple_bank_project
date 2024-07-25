@@ -27,6 +27,8 @@ func TestAuthController_Login(t *testing.T) {
 	testCase := []struct {
 		name           string
 		body           gin.H
+		userAgent      string
+		clientIp       string
 		mockSetup      func(store *mockdb.MockStore)
 		expectedStatus int
 		expectedBody   string
@@ -38,8 +40,11 @@ func TestAuthController_Login(t *testing.T) {
 				"username": user.Username,
 				"password": password,
 			},
+			userAgent: "test",
+			clientIp:  "1.1.1.1",
 			mockSetup: func(store *mockdb.MockStore) {
 				store.EXPECT().GetDetailLoginByUsername(gomock.Any(), user.Username).Times(1).Return(user, nil)
+				store.EXPECT().CreateSession(gomock.Any(), gomock.Any()).Times(1).Return(db.Session{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   "Login success",
@@ -63,6 +68,8 @@ func TestAuthController_Login(t *testing.T) {
 				"username": user.Username,
 				"password": "invalid password",
 			},
+			userAgent: "test",
+			clientIp:  "1.1.1.1",
 			mockSetup: func(store *mockdb.MockStore) {
 				store.EXPECT().GetDetailLoginByUsername(gomock.Any(), user.Username).Times(1).Return(user, nil)
 			},
@@ -88,6 +95,8 @@ func TestAuthController_Login(t *testing.T) {
 				"username": user.Username,
 				"password": "short",
 			},
+			userAgent: "test",
+			clientIp:  "1.1.1.1",
 			mockSetup: func(store *mockdb.MockStore) {
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -102,6 +111,24 @@ func TestAuthController_Login(t *testing.T) {
 				"username": "short",
 				"password": "short",
 			},
+			userAgent: "test",
+			clientIp:  "1.1.1.1",
+			mockSetup: func(store *mockdb.MockStore) {
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   "Validation error",
+			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, w.Code)
+			},
+		},
+		{
+			name: "Empty user agent",
+			body: gin.H{
+				"username": user.Username,
+				"password": password,
+			},
+			userAgent: "",
+			clientIp:  "1.1.1.1",
 			mockSetup: func(store *mockdb.MockStore) {
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -116,6 +143,8 @@ func TestAuthController_Login(t *testing.T) {
 				"username": "notfound",
 				"password": "password",
 			},
+			userAgent:      "test",
+			clientIp:       "1.1.1.1",
 			expectedStatus: http.StatusNotFound,
 			expectedBody:   "User not found",
 			mockSetup: func(store *mockdb.MockStore) {
@@ -141,6 +170,8 @@ func TestAuthController_Login(t *testing.T) {
 				"username": user.Username,
 				"password": password,
 			},
+			userAgent:      "test",
+			clientIp:       "1.1.1.1",
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   "Internal server error",
 			mockSetup: func(store *mockdb.MockStore) {
@@ -163,9 +194,11 @@ func TestAuthController_Login(t *testing.T) {
 			// config token
 
 			configToken := map[string]string{
-				"token_secret":          util.RandomString(32),
-				"access_token_duration": time.Minute.String(),
+				"token_secret":           util.RandomString(32),
+				"access_token_duration":  time.Minute.String(),
+				"refresh_token_duration": (15 * time.Minute).String(),
 			}
+
 			service := service.NewAuthService(store, configToken)
 			controller := controller.NewAuthController(service)
 
@@ -175,6 +208,8 @@ func TestAuthController_Login(t *testing.T) {
 			w := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(w)
 			ctx.Request = httptest.NewRequest(http.MethodPost, "/auth/login", bytes.NewReader(bodyJSON))
+
+			ctx.Request.Header.Set("User-Agent", tt.userAgent)
 
 			controller.Login(ctx)
 

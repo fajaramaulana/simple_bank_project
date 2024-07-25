@@ -38,10 +38,11 @@ func TestGetByUsername(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 	user := GenerateUser(t)
-
+	hashedPassword, err := util.MakePasswordBcrypt("P4ssw0rdUpdate!")
+	require.NoError(t, err)
 	arg := UpdateUserParams{
 		UserUuid:          user.UserUuid,
-		HashedPassword:    sql.NullString{String: "P4ssw0rd!", Valid: true},
+		HashedPassword:    sql.NullString{String: hashedPassword, Valid: true},
 		Email:             sql.NullString{String: util.RandomEmail(), Valid: true},
 		FullName:          sql.NullString{String: util.RandomName(), Valid: true},
 		PasswordChangedAt: sql.NullTime{Time: time.Now(), Valid: true},
@@ -57,9 +58,13 @@ func TestUpdateUser(t *testing.T) {
 func TestUpdatePassword(t *testing.T) {
 	user := GenerateUser(t)
 
+	hashedPassword, err := util.MakePasswordBcrypt("P4ssw0rdUpdate!")
+
+	require.NoError(t, err)
+
 	arg := UpdateUserPasswordParams{
 		UserUuid:          user.UserUuid,
-		HashedPassword:    sql.NullString{String: "P4ssw0rd!", Valid: true},
+		HashedPassword:    sql.NullString{String: hashedPassword, Valid: true},
 		PasswordChangedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	}
 

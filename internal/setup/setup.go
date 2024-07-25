@@ -79,8 +79,9 @@ func InitializeAndStartApp(config util.Config) {
 
 	// configToken
 	configToken := map[string]string{
-		"token_secret":          config.TokenSymmetricKey,
-		"access_token_duration": config.AccessTokenDuration.String(),
+		"token_secret":           config.TokenSymmetricKey,
+		"access_token_duration":  config.AccessTokenDuration.String(),
+		"refresh_token_duration": config.RefreshTokenDuration.String(),
 	}
 	// account
 	accountService := service.NewAccountService(store)
@@ -112,8 +113,9 @@ func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
 
 	// Config token
 	configToken := map[string]string{
-		"token_secret":          util.RandomString(32),
-		"access_token_duration": time.Minute.String(),
+		"token_secret":           util.RandomString(32),
+		"access_token_duration":  time.Minute.String(),
+		"refresh_token_duration": (15 * time.Minute).String(),
 	}
 
 	// Initialize services and controllers
