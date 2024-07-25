@@ -21,36 +21,40 @@ type Config struct {
 
 // LoadConfig reads configuration from file or environment variables.
 func LoadConfig(path string) (config Config, err error) {
-	viper.AutomaticEnv()
-
-	// Bind environment variables to struct fields
-	viper.BindEnv("DB_HOST")
-	viper.BindEnv("DB_PORT")
-	viper.BindEnv("DB_USER")
-	viper.BindEnv("DB_PASSWORD")
-	viper.BindEnv("DB_NAME")
-	viper.BindEnv("DB_SSLMODE")
-	viper.BindEnv("PORT")
-	viper.BindEnv("TOKEN_SYMMETRIC_KEY")
-	viper.BindEnv("ACCESS_TOKEN_DURATION")
-
 	if os.Getenv("DB_USER") == "" || os.Getenv("DB_PASSWORD") == "" || os.Getenv("DB_NAME") == "" {
-		// Set up Viper to read from the .env file
 		viper.AddConfigPath(path)
-		viper.SetConfigName("app.env")
+		viper.SetConfigName("app")
 		viper.SetConfigType("env")
 
-		err := viper.ReadInConfig()
+		viper.AutomaticEnv()
+
+		err = viper.ReadInConfig()
+		if err != nil {
+			return
+		}
+
+		err = viper.Unmarshal(&config)
+		return config, err
+	} else {
+		viper.AutomaticEnv()
+
+		// Bind environment variables to struct fields
+		viper.BindEnv("DB_HOST")
+		viper.BindEnv("DB_PORT")
+		viper.BindEnv("DB_USER")
+		viper.BindEnv("DB_PASSWORD")
+		viper.BindEnv("DB_NAME")
+		viper.BindEnv("DB_SSLMODE")
+		viper.BindEnv("PORT")
+		viper.BindEnv("TOKEN_SYMMETRIC_KEY")
+		viper.BindEnv("ACCESS_TOKEN_DURATION")
+
+		// Unmarshal the config into the struct
+		err = viper.Unmarshal(&config)
 		if err != nil {
 			return config, err
 		}
-	}
 
-	// Unmarshal the config into the struct
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		return config, err
+		return config, nil
 	}
-
-	return config, nil
 }

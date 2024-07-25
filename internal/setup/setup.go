@@ -45,6 +45,36 @@ func DbConnection(config util.Config) *sql.DB {
 func InitializeAndStartApp(config util.Config) {
 	// / Get environment variables
 	conn := DbConnection(config)
+
+	// checking table user is empty or not and return count
+	var count int
+	row := conn.QueryRow("SELECT COUNT(*) FROM users")
+	err := row.Scan(&count)
+	if err != nil {
+		log.Fatal("Cannot check table users: ", err)
+	}
+
+	if count == 0 {
+		defaultPass, err := util.MakePasswordBcrypt("Passw0rd!")
+		if err != nil {
+			log.Fatal("Cannot create password: ", err)
+		}
+
+		// insert data to table user
+		queries := []string{
+			"INSERT INTO users (username, full_name, email, hashed_password, role) VALUES ('admin', 'administrator', 'admin@simplebank.org', '" + defaultPass + "', 'admin')",
+			"INSERT INTO users (username, full_name, email, hashed_password, role) VALUES ('user', 'customer', 'fajar1@gmail.com', '" + defaultPass + "', 'customer')",
+		}
+
+		for _, query := range queries {
+			_, err := conn.Exec(query)
+			if err != nil {
+				log.Fatal("Cannot insert data to DB: ", err)
+			}
+		}
+	}
+
+	// Create a new store
 	store := db.NewStore(conn)
 
 	// configToken
