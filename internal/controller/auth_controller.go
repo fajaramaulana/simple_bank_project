@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -29,7 +30,24 @@ func (a *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	responseService, err := a.authService.Login(ctx, req.Username, req.Password)
+	// get user agent
+	userAgent := ctx.GetHeader("User-Agent")
+	if userAgent == "" {
+		log.Printf("User-Agent is required")
+		helper.ReturnJSONError(ctx, http.StatusBadRequest, "User-Agent is required", nil, nil)
+		return
+	}
+
+	// get client ip
+	clientIp := ctx.ClientIP()
+	fmt.Printf("%# v\n", clientIp)
+	if clientIp == "" {
+		log.Printf("Client IP is required")
+		helper.ReturnJSONError(ctx, http.StatusBadRequest, "Client IP is required", nil, nil)
+		return
+	}
+
+	responseService, err := a.authService.Login(ctx, req.Username, req.Password, userAgent, clientIp)
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
 

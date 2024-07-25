@@ -29,7 +29,7 @@ func NewAuthService(db db.Store, configToken map[string]string) *AuthService {
 	}
 }
 
-func (a *AuthService) Login(ctx context.Context, username, password string) (response.AuthLoginResponse, error) {
+func (a *AuthService) Login(ctx context.Context, username, password, userAgent, ClientIP string) (response.AuthLoginResponse, error) {
 	detailLogin, err := a.db.GetDetailLoginByUsername(ctx, username)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -49,21 +49,47 @@ func (a *AuthService) Login(ctx context.Context, username, password string) (res
 	if err != nil {
 		return response.AuthLoginResponse{}, err
 	}
-	tokenDuration, err := time.ParseDuration(a.configToken["access_token_duration"])
+	accessTokenDuration, err := time.ParseDuration(a.configToken["access_token_duration"])
 	if err != nil {
 		return response.AuthLoginResponse{}, err
 	}
-	duration := tokenDuration
 
 	role := detailLogin.Role
 
-	token, _, err := maker.CreateToken(detailLogin.UserUuid.String(), duration, role)
+	accessToken, _, err := maker.CreateToken(detailLogin.UserUuid.String(), accessTokenDuration, role)
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	refreshTokenDuration, err := time.ParseDuration(a.configToken["refresh_token_duration"])
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	refreshToken, payloadRefresh, err := maker.CreateToken(detailLogin.UserUuid.String(), refreshTokenDuration, role)
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	// save refresh token to db
+	session, err := a.db.CreateSession(ctx, db.CreateSessionParams{
+		ID:           payloadRefresh.ID,
+		UserUuid:     detailLogin.UserUuid,
+		RefreshToken: refreshToken,
+		UserAgent:    userAgent,
+		ClientIp:     ClientIP,
+		IsBlocked:    false,
+		ExpiresAt:    payloadRefresh.ExpiredAt,
+	})
+
 	if err != nil {
 		return response.AuthLoginResponse{}, err
 	}
 
 	return response.AuthLoginResponse{
-		AcessToken: token,
+		SessionId:    session.ID.String(),
+		AcessToken:   accessToken,
+		RefreshToken: refreshToken,
 		User: response.UserGetSimple{
 			UserUUID: detailLogin.UserUuid.String(),
 			Username: detailLogin.Username,

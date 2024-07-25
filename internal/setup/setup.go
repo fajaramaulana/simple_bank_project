@@ -79,8 +79,9 @@ func InitializeAndStartApp(config util.Config) {
 
 	// configToken
 	configToken := map[string]string{
-		"token_secret":          config.TokenSymmetricKey,
-		"access_token_duration": config.AccessTokenDuration.String(),
+		"token_secret":           config.TokenSymmetricKey,
+		"access_token_duration":  config.AccessTokenDuration.String(),
+		"refresh_token_duration": config.RefreshTokenDuration.String(),
 	}
 	// account
 	accountService := service.NewAccountService(store)
