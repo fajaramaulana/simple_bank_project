@@ -57,6 +57,7 @@ func (r *Router) SetupRouter() {
 
 	// auth
 	v1.POST("/auth/login", r.auth.Login)
+	v1.POST("auth/refresh/token", r.auth.RefreshToken)
 
 	authRoutesV1 := v1.Group("").Use(middleware.AuthMiddleware(r.TokenMaker))
 

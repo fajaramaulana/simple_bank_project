@@ -98,3 +98,86 @@ func (a *AuthService) Login(ctx context.Context, username, password, userAgent, 
 		},
 	}, nil
 }
+
+func (a *AuthService) RefreshToken(ctx context.Context, refreshToken, userAgent, ClientIP string) (response.AuthLoginResponse, error) {
+	maker, err := token.NewPasetoMaker(a.configToken["token_secret"])
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	payload, err := maker.VerifyToken(refreshToken)
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	// get session
+	session, err := a.db.GetSession(ctx, payload.ID)
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	// check if session is blocked
+	if session.IsBlocked {
+		return response.AuthLoginResponse{}, fmt.Errorf("session is blocked")
+	}
+
+	// check if session is expired
+	if time.Now().After(session.ExpiresAt) {
+		return response.AuthLoginResponse{}, fmt.Errorf("session is expired")
+	}
+
+	// generate token with paseto
+	accessTokenDuration, err := time.ParseDuration(a.configToken["access_token_duration"])
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	// get Detail User
+	detailUser, err := a.db.GetUserByUserUUID(ctx, session.UserUuid)
+	if err != nil {
+		return response.AuthLoginResponse{}, ErrUserNotFound
+	}
+	role := detailUser.Role
+
+	accessToken, _, err := maker.CreateToken(session.UserUuid.String(), accessTokenDuration, role)
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	refreshTokenDuration, err := time.ParseDuration(a.configToken["refresh_token_duration"])
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	refreshToken, payloadRefresh, err := maker.CreateToken(session.UserUuid.String(), refreshTokenDuration, role)
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	// save refresh token to db
+	session, err = a.db.CreateSession(ctx, db.CreateSessionParams{
+		ID:           payloadRefresh.ID,
+		UserUuid:     session.UserUuid,
+		RefreshToken: refreshToken,
+		UserAgent:    userAgent,
+		ClientIp:     ClientIP,
+		IsBlocked:    false,
+		ExpiresAt:    payloadRefresh.ExpiredAt,
+	})
+
+	if err != nil {
+		return response.AuthLoginResponse{}, err
+	}
+
+	return response.AuthLoginResponse{
+		SessionId:    session.ID.String(),
+		AcessToken:   accessToken,
+		RefreshToken: refreshToken,
+		User: response.UserGetSimple{
+			UserUUID: session.UserUuid.String(),
+			Username: detailUser.Username,
+			FullName: detailUser.FullName,
+			Email:    detailUser.Email,
+		},
+	}, nil
+}
