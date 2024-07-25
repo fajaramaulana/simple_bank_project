@@ -8,15 +8,16 @@ import (
 )
 
 type Config struct {
-	DBHost              string        `mapstructure:"DB_HOST"`
-	DBPort              string        `mapstructure:"DB_PORT"`
-	DBUser              string        `mapstructure:"DB_USER"`
-	DBPassword          string        `mapstructure:"DB_PASSWORD"`
-	DBName              string        `mapstructure:"DB_NAME"`
-	DBSSLMode           string        `mapstructure:"DB_SSLMODE"`
-	Port                string        `mapstructure:"PORT"`
-	TokenSymmetricKey   string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
-	AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	DBHost               string        `mapstructure:"DB_HOST"`
+	DBPort               string        `mapstructure:"DB_PORT"`
+	DBUser               string        `mapstructure:"DB_USER"`
+	DBPassword           string        `mapstructure:"DB_PASSWORD"`
+	DBName               string        `mapstructure:"DB_NAME"`
+	DBSSLMode            string        `mapstructure:"DB_SSLMODE"`
+	Port                 string        `mapstructure:"PORT"`
+	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration time.Duration `mapsctructure:"REFRESH_TOKEN_DURATION"`
 }
 
 // LoadConfig reads configuration from file or environment variables.
@@ -33,6 +34,18 @@ func LoadConfig(path string) (config Config, err error) {
 			return
 		}
 
+		// set OS environment variables
+		_ = os.Setenv("DB_HOST", viper.GetString("DB_HOST"))
+		_ = os.Setenv("DB_PORT", viper.GetString("DB_PORT"))
+		_ = os.Setenv("DB_USER", viper.GetString("DB_USER"))
+		_ = os.Setenv("DB_PASSWORD", viper.GetString("DB_PASSWORD"))
+		_ = os.Setenv("DB_NAME", viper.GetString("DB_NAME"))
+		_ = os.Setenv("DB_SSLMODE", viper.GetString("DB_SSLMODE"))
+		_ = os.Setenv("PORT", viper.GetString("PORT"))
+		_ = os.Setenv("TOKEN_SYMMETRIC_KEY", viper.GetString("TOKEN_SYMMETRIC_KEY"))
+		_ = os.Setenv("ACCESS_TOKEN_DURATION", viper.GetString("ACCESS_TOKEN_DURATION"))
+		_ = os.Setenv("REFRESH_TOKEN_DURATION", viper.GetString("REFRESH_TOKEN_DURATION"))
+
 		err = viper.Unmarshal(&config)
 		return config, err
 	} else {
@@ -48,6 +61,7 @@ func LoadConfig(path string) (config Config, err error) {
 		viper.BindEnv("PORT")
 		viper.BindEnv("TOKEN_SYMMETRIC_KEY")
 		viper.BindEnv("ACCESS_TOKEN_DURATION")
+		viper.BindEnv("REFRESH_TOKEN_DURATION")
 
 		// Unmarshal the config into the struct
 		err = viper.Unmarshal(&config)
