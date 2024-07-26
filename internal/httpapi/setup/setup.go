@@ -4,15 +4,20 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net"
 	"testing"
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	grpcapi "github.com/fajaramaulana/simple_bank_project/internal/grpcapi/server"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/controller"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/router"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/service"
+	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	_ "github.com/lib/pq"
 )
@@ -136,4 +141,84 @@ func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
 	require.NoError(t, err)
 
 	return server
+}
+
+func InitializeAndStartAppGRPCApi(config util.Config) {
+	// / Get environment variables
+	conn := DbConnection(config)
+
+	// checking table user is empty or not and return count
+	var count int
+	row := conn.QueryRow("SELECT COUNT(*) FROM users")
+	err := row.Scan(&count)
+	if err != nil {
+		log.Fatal("Cannot check table users: ", err)
+	}
+
+	if count == 0 {
+		defaultPass, err := util.MakePasswordBcrypt("Passw0rd!")
+		if err != nil {
+			log.Fatal("Cannot create password: ", err)
+		}
+
+		// insert data to table user
+		queries := []string{
+			"INSERT INTO users (username, full_name, email, hashed_password, role) VALUES ('admin', 'administrator', 'admin@simplebank.org', '" + defaultPass + "', 'admin')",
+			"INSERT INTO users (username, full_name, email, hashed_password, role) VALUES ('user', 'customer', 'fajar1@gmail.com', '" + defaultPass + "', 'customer')",
+		}
+
+		for _, query := range queries {
+			_, err := conn.Exec(query)
+			if err != nil {
+				log.Fatal("Cannot insert data to DB: ", err)
+			}
+		}
+	}
+
+	// Create a new store
+	store := db.NewStore(conn)
+
+	// configToken
+	configToken := map[string]string{
+		"token_secret":           config.TokenSymmetricKey,
+		"access_token_duration":  config.AccessTokenDuration.String(),
+		"refresh_token_duration": config.RefreshTokenDuration.String(),
+	}
+	// account
+	accountService := service.NewAccountService(store)
+	accountController := controller.NewAccountController(accountService)
+
+	// transfer
+	transferService := service.NewTransactionService(store)
+	transferController := controller.NewTransactionController(transferService)
+
+	// user
+	userService := service.NewUserService(store)
+	userController := controller.NewUserController(userService)
+
+	// auth
+	authService := service.NewAuthService(store, configToken)
+	authController := controller.NewAuthController(authService)
+
+	server, err := grpcapi.NewServer(accountController, transferController, userController, authController, configToken)
+	if err != nil {
+		log.Fatal("Cannot create server: ", err)
+	}
+
+	grpcServer := grpc.NewServer()
+
+	pb.RegisterSimpleBankServer(grpcServer, server)
+	reflection.Register(grpcServer)
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", config.GRPCPort))
+
+	if err != nil {
+		log.Fatal("Cannot listen to port: ", err)
+	}
+
+	log.Printf("Starting gRPC server on port %s", config.GRPCPort)
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		log.Fatal("Cannot start gRPC server: ", err)
+	}
 }
