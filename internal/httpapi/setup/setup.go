@@ -9,7 +9,7 @@ import (
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	grpcapi "github.com/fajaramaulana/simple_bank_project/internal/grpcapi/server"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/controller"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/router"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/service"
@@ -178,29 +178,7 @@ func InitializeAndStartAppGRPCApi(config util.Config) {
 	// Create a new store
 	store := db.NewStore(conn)
 
-	// configToken
-	configToken := map[string]string{
-		"token_secret":           config.TokenSymmetricKey,
-		"access_token_duration":  config.AccessTokenDuration.String(),
-		"refresh_token_duration": config.RefreshTokenDuration.String(),
-	}
-	// account
-	accountService := service.NewAccountService(store)
-	accountController := controller.NewAccountController(accountService)
-
-	// transfer
-	transferService := service.NewTransactionService(store)
-	transferController := controller.NewTransactionController(transferService)
-
-	// user
-	userService := service.NewUserService(store)
-	userController := controller.NewUserController(userService)
-
-	// auth
-	authService := service.NewAuthService(store, configToken)
-	authController := controller.NewAuthController(authService)
-
-	server, err := grpcapi.NewServer(accountController, transferController, userController, authController, configToken)
+	server, err := grpcapi.NewServer(config, store)
 	if err != nil {
 		log.Fatal("Cannot create server: ", err)
 	}
