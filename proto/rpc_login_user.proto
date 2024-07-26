@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package pb;
+import "user.proto";
+
+option go_package = "github.com/fajaramaulana/simple_bank_project/pb";
+
+message LoginUserRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginUserResponse {
+    string session_id = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+    User user = 4;
+}
