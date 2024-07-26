@@ -3,10 +3,10 @@ package router
 import (
 	"fmt"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/controller"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/middleware"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/controller"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/helper"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/middleware"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"

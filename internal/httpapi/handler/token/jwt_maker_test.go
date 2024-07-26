@@ -4,14 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
-func TestPasetoMaker(t *testing.T) {
-	maker, err := token.NewPasetoMaker(util.RandomString(32))
+func TestJWTMaker(t *testing.T) {
+	maker, err := token.NewJWTMaker(util.RandomString(32))
 	require.NoError(t, err)
 
 	newRandomUUID, err := uuid.NewRandom()
@@ -43,8 +44,8 @@ func TestPasetoMaker(t *testing.T) {
 	require.WithinDuration(t, expiredAt, payload.ExpiredAt, time.Second)
 }
 
-func TestExpiredPasetoToken(t *testing.T) {
-	maker, err := token.NewPasetoMaker(util.RandomString(32))
+func TestExpiredJWTToken(t *testing.T) {
+	maker, err := token.NewJWTMaker(util.RandomString(32))
 	require.NoError(t, err)
 
 	newRandomUUID, err := uuid.NewRandom()
@@ -52,6 +53,7 @@ func TestExpiredPasetoToken(t *testing.T) {
 
 	// parse uuid to string
 	uuidUser := newRandomUUID.String()
+
 	role := util.RandomRole()
 
 	tokenString, payload, err := maker.CreateToken(uuidUser, -time.Minute, role)
@@ -64,25 +66,44 @@ func TestExpiredPasetoToken(t *testing.T) {
 	require.EqualError(t, err, token.ErrExpiredToken.Error())
 	require.Nil(t, payload)
 }
-func TestInvalidTokenPaseto(t *testing.T) {
-	maker, err := token.NewPasetoMaker(util.RandomString(32))
+
+func TestInvalidJWTTokenAlgNone(t *testing.T) {
+
+	newRandomUUID, err := uuid.NewRandom()
 	require.NoError(t, err)
 
-	_, err = maker.VerifyToken("invalid token")
-	require.EqualError(t, err, token.ErrInvalidToken.Error())
-}
-
-func TestInvalidPayloadPaseto(t *testing.T) {
-	maker, err := token.NewPasetoMaker(util.RandomString(32))
-	require.NoError(t, err)
+	// parse uuid to string
+	uuidUser := newRandomUUID.String()
 
 	role := util.RandomRole()
 
-	_, _, err = maker.CreateToken("test", time.Minute, role)
+	payload, err := token.NewPayload(uuidUser, time.Minute, role)
+	require.NoError(t, err)
+
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodNone, payload)
+	tokenString, err := jwtToken.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	require.NoError(t, err)
+
+	maker, err := token.NewJWTMaker(util.RandomString(32))
+	require.NoError(t, err)
+
+	payload, err = maker.VerifyToken(tokenString)
 	require.Error(t, err)
+	require.EqualError(t, err, token.ErrInvalidToken.Error())
+	require.Nil(t, payload)
 }
 
-func TestInvalidSecretKeyPaseto(t *testing.T) {
-	_, err := token.NewPasetoMaker("short")
-	require.EqualError(t, err, "invalid key, must be at least 32 characters")
+func TestInvalidSecretToken(t *testing.T) {
+	maker, err := token.NewJWTMaker(util.RandomString(30))
+	require.Error(t, err)
+	require.Nil(t, maker)
+}
+
+func TestInvalidPayload(t *testing.T) {
+	_, err := token.NewJWTMaker(util.RandomString(32))
+	require.NoError(t, err)
+
+	_, err = token.NewPayload("wrong-uuid", time.Minute, "customer")
+	require.Error(t, err)
+	require.EqualError(t, err, "invalid UUID length: 10")
 }

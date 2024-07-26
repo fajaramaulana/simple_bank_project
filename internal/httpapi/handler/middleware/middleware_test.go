@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/middleware"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
-	"github.com/fajaramaulana/simple_bank_project/internal/setup"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/middleware"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )

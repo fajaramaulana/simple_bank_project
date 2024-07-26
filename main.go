@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/setup"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 )
 

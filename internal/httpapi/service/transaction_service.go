@@ -7,10 +7,10 @@ import (
 	"strconv"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/response"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/helper"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/response"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 )
 
 type TransactionService struct {

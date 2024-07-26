@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/helper"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"

@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	request "github.com/fajaramaulana/simple_bank_project/internal/handler/request"
+	request "github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )

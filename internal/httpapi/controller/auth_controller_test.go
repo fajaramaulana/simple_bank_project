@@ -11,8 +11,8 @@ import (
 
 	mockdb "github.com/fajaramaulana/simple_bank_project/db/mock"
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/controller"
-	"github.com/fajaramaulana/simple_bank_project/internal/service"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/controller"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/service"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"

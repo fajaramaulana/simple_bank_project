@@ -8,9 +8,9 @@ import (
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/controller"
-	"github.com/fajaramaulana/simple_bank_project/internal/router"
-	"github.com/fajaramaulana/simple_bank_project/internal/service"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/controller"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/router"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/service"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/stretchr/testify/require"
 

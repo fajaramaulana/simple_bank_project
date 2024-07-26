@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/helper"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/stretchr/testify/require"
 )

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"

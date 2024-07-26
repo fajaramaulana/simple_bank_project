@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/response"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/response"
 	"github.com/gin-gonic/gin"
 )
 

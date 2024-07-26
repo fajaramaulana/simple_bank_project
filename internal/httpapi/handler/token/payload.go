@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/helper"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/helper"
 	"github.com/google/uuid"
 )
 

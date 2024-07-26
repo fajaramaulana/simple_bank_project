@@ -13,9 +13,9 @@ import (
 
 	mockdb "github.com/fajaramaulana/simple_bank_project/db/mock"
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/middleware"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
-	"github.com/fajaramaulana/simple_bank_project/internal/setup"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/middleware"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

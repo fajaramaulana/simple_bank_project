@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/request"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/response"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/response"
 )
 
 // Store represents the interface for interacting with the database.

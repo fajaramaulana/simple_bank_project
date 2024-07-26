@@ -7,8 +7,8 @@ import (
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/response"
-	"github.com/fajaramaulana/simple_bank_project/internal/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/response"
+	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/util"
 )
 
