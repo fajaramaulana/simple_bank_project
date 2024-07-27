@@ -15,6 +15,7 @@ type Config struct {
 	DBName               string        `mapstructure:"DB_NAME"`
 	DBSSLMode            string        `mapstructure:"DB_SSLMODE"`
 	Port                 string        `mapstructure:"PORT"`
+	PortGatewayGrpc      string        `mapstructure:"PORT_GATEWAY_GRPC"`
 	GRPCPort             string        `mapstructure:"GRPC_PORT"`
 	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
@@ -43,6 +44,7 @@ func LoadConfig(path string) (config Config, err error) {
 		_ = os.Setenv("DB_NAME", viper.GetString("DB_NAME"))
 		_ = os.Setenv("DB_SSLMODE", viper.GetString("DB_SSLMODE"))
 		_ = os.Setenv("PORT", viper.GetString("PORT"))
+		_ = os.Setenv("PORT_GATEWAY_GRPC", viper.GetString("PORT_GATEWAY_GRPC"))
 		_ = os.Setenv("GRPC_PORT", viper.GetString("GRPC_PORT"))
 		_ = os.Setenv("TOKEN_SYMMETRIC_KEY", viper.GetString("TOKEN_SYMMETRIC_KEY"))
 		_ = os.Setenv("ACCESS_TOKEN_DURATION", viper.GetString("ACCESS_TOKEN_DURATION"))
@@ -61,6 +63,7 @@ func LoadConfig(path string) (config Config, err error) {
 		viper.BindEnv("DB_NAME")
 		viper.BindEnv("DB_SSLMODE")
 		viper.BindEnv("PORT")
+		viper.BindEnv("PORT_GATEWAY_GRPC")
 		viper.BindEnv("GRPC_PORT")
 		viper.BindEnv("TOKEN_SYMMETRIC_KEY")
 		viper.BindEnv("ACCESS_TOKEN_DURATION")

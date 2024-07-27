@@ -96,12 +96,12 @@ func InitializeAndStartGatewayServer(config util.Config) {
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
 
-	listener, err := net.Listen("tcp", ":"+config.Port)
+	listener, err := net.Listen("tcp", ":"+config.PortGatewayGrpc)
 	if err != nil {
 		log.Fatal("Failed to listen: ", err)
 	}
 
-	log.Printf("Starting gRPC gateway server on %s", config.Port)
+	log.Printf("Starting gRPC gateway server on %s", config.PortGatewayGrpc)
 
 	err = http.Serve(listener, mux)
 	if err != nil {

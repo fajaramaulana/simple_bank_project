@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/setup"
+	setuphttp "github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 )
 
@@ -19,12 +20,13 @@ func main() {
 	}
 
 	go runGatewayServer(config)
+	go runGinServer(config)
 	rungRPCServer(config)
 }
 
-// func runGinServer(config util.Config) {
-// 	setuphttp.InitializeAndStartAppHTTPApi(config)
-// }
+func runGinServer(config util.Config) {
+	setuphttp.InitializeAndStartAppHTTPApi(config)
+}
 
 func rungRPCServer(config util.Config) {
 	setup.InitializeAndStartAppGRPCApi(config)
