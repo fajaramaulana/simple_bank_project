@@ -16,7 +16,7 @@ import (
 
 type Server struct {
 	pb.UnimplementedSimpleBankServer
-	grpcServer     *grpc.Server
+	// grpcServer     *grpc.Server
 	config         util.Config
 	authController *controller.AuthController
 	userController *controller.UserController
@@ -30,19 +30,13 @@ func NewServer(store db.Store, authController *controller.AuthController, userCo
 	}
 
 	log.Println("Initializing server with controllers")
-	grpcServer := grpc.NewServer()
-
 	server := &Server{
-		grpcServer:     grpcServer,
+		// grpcServer:     grpcServer,
 		config:         config,
 		authController: authController,
 		userController: userController,
 		tokenMaker:     tokenMaker,
 	}
-
-	fmt.Printf("%# v\n", server)
-	pb.RegisterSimpleBankServer(grpcServer, server)
-	reflection.Register(grpcServer)
 	return server, nil
 }
 
@@ -53,7 +47,12 @@ func (s *Server) Start(port string) {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	log.Printf("Starting gRPC server on %s", port)
-	if err := s.grpcServer.Serve(listener); err != nil {
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterSimpleBankServer(grpcServer, s)
+	reflection.Register(grpcServer)
+
+	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 }

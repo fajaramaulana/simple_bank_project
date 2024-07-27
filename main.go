@@ -30,3 +30,8 @@ func rungRPCServer(config util.Config) {
 	// setup.InitializeAndStartAppGRPCApi(config)
 	setup.InitializeAndStartAppGRPCApi(config)
 }
+
+// func runGatewayServer(config util.Config)
+// {
+
+// }

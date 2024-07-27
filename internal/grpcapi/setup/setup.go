@@ -59,16 +59,29 @@ func InitializeAndStartAppGRPCApi(config util.Config) {
 
 	server.Start(config.GRPCPort)
 	log.Println("gRPC server started")
-
-	// var wg sync.WaitGroup
-	// wg.Add(1)
-
-	// go func() {
-	// 	defer wg.Done()
-	// 	server.Start(config.GRPCPort)
-	// 	log.Println("gRPC server started")
-	// }()
-
-	// wg.Wait()
-
 }
+
+// func InitializeAndStartGatewayServer(config util.Config) {
+// 	conn := DbConnection(config)
+// 	if conn == nil {
+// 		log.Fatal("Failed to connect to database")
+// 	} else {
+// 		log.Println("Database connection successful")
+// 	}
+
+// 	store := db.NewStore(conn)
+// 	log.Println("Store initialized")
+
+// 	authService := service.NewAuthService(store, config)
+// 	authController := controller.NewAuthController(authService)
+
+// 	userService := service.NewUserService(store, config)
+// 	userController := controller.NewUserController(userService)
+
+// 	server, err := grpcapi.NewServer(store, authController, userController, config)
+// 	if err != nil {
+// 		log.Fatal("Cannot create gRPC server: ", err)
+// 	}
+
+// 	grpcMux := runtime.NewServeMux()
+// }
