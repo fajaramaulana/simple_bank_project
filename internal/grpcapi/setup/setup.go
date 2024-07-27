@@ -15,7 +15,9 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/rakyll/statik/fs"
 
+	_ "github.com/fajaramaulana/simple_bank_project/doc/statik"
 	_ "github.com/lib/pq"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -95,8 +97,14 @@ func InitializeAndStartGatewayServer(config util.Config) {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
-	fs := http.FileServer(http.Dir("./doc/swagger"))
-	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
+
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal("Cannot create statik file system: ", err)
+	}
+
+	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
+	mux.Handle("/swagger/", swaggerHandler)
 
 	listener, err := net.Listen("tcp", ":"+config.PortGatewayGrpc)
 	if err != nil {
