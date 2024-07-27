@@ -6,6 +6,7 @@ import (
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/shared"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
@@ -23,7 +24,7 @@ func NewAuthService(db db.Store, config util.Config) *AuthService {
 	return &AuthService{db: db, config: config}
 }
 
-func (s *AuthService) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+func (s *AuthService) LoginUser(ctx context.Context, req *pb.LoginUserRequest, metaData *shared.Metadata) (*pb.LoginUserResponse, error) {
 	detailLogin, err := s.db.GetDetailLoginByUsername(ctx, req.GetUsername())
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -70,8 +71,8 @@ func (s *AuthService) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (
 		ID:           payloadRefresh.ID,
 		UserUuid:     detailLogin.UserUuid,
 		RefreshToken: refreshToken,
-		UserAgent:    "",
-		ClientIp:     "",
+		UserAgent:    metaData.UserAgent,
+		ClientIp:     metaData.ClientIP,
 		IsBlocked:    false,
 		ExpiresAt:    payloadRefresh.ExpiredAt,
 	}

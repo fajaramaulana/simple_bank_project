@@ -8,6 +8,7 @@ import (
 
 // Implement gRPC methods using the controllers
 func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserRespose, error) {
+	// metaData := s.ExtractMetadata(ctx)
 	return s.userController.CreateUser(ctx, req)
 }
 
