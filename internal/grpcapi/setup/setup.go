@@ -9,15 +9,15 @@ import (
 	"net/http"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/controller"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/server"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/service"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	_ "github.com/lib/pq"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func DbConnection(config util.Config) *sql.DB {
@@ -42,7 +42,7 @@ func DbConnection(config util.Config) *sql.DB {
 
 func InitializeAndStartAppGRPCApi(config util.Config) {
 	conn := DbConnection(config)
-
+	db.NewStore(conn)
 	store := db.NewStore(conn)
 
 	authService := service.NewAuthService(store, config)
@@ -51,7 +51,7 @@ func InitializeAndStartAppGRPCApi(config util.Config) {
 	userService := service.NewUserService(store, config)
 	userController := controller.NewUserController(userService)
 
-	server, err := grpcapi.NewServer(store, authController, userController, config)
+	server, err := server.NewServer(store, authController, userController, config)
 	if err != nil {
 		log.Fatal("Cannot create gRPC server: ", err)
 	}
@@ -70,7 +70,7 @@ func InitializeAndStartGatewayServer(config util.Config) {
 	userService := service.NewUserService(store, config)
 	userController := controller.NewUserController(userService)
 
-	server, err := grpcapi.NewServer(store, authController, userController, config)
+	server, err := server.NewServer(store, authController, userController, config)
 	if err != nil {
 		log.Fatal("Cannot create gRPC server: ", err)
 	}
