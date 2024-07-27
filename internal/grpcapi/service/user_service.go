@@ -1,9 +1,10 @@
-package grpcapi
+package service
 
 import (
 	"context"
 	"time"
 
+	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
@@ -12,7 +13,16 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserRespose, error) {
+type UserService struct {
+	db     db.Store
+	config util.Config
+}
+
+func NewUserService(db db.Store, config util.Config) *UserService {
+	return &UserService{db: db, config: config}
+}
+
+func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserRespose, error) {
 	user, err := s.db.GetUserByEmail(ctx, req.GetEmail())
 	if err != nil {
 		if err.Error() != "sql: no rows in result set" {

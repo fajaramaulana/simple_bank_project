@@ -1,4 +1,4 @@
-package grpcapi
+package service
 
 import (
 	"context"
@@ -14,7 +14,16 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+type AuthService struct {
+	db     db.Store
+	config util.Config
+}
+
+func NewAuthService(db db.Store, config util.Config) *AuthService {
+	return &AuthService{db: db, config: config}
+}
+
+func (s *AuthService) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
 	detailLogin, err := s.db.GetDetailLoginByUsername(ctx, req.GetUsername())
 	if err != nil {
 		if err == sql.ErrNoRows {

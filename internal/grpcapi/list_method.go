@@ -1,0 +1,16 @@
+package grpcapi
+
+import (
+	"context"
+
+	"github.com/fajaramaulana/simple_bank_project/pb"
+)
+
+// Implement gRPC methods using the controllers
+func (s *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserRespose, error) {
+	return s.userController.CreateUser(ctx, req)
+}
+
+func (s *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+	return s.authController.LoginUser(ctx, req)
+}
