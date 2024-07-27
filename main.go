@@ -18,7 +18,7 @@ func main() {
 		log.Fatal("Environment variables are not properly loaded")
 	}
 
-	// runGinServer(config)
+	go runGatewayServer(config)
 	rungRPCServer(config)
 }
 
@@ -27,11 +27,9 @@ func main() {
 // }
 
 func rungRPCServer(config util.Config) {
-	// setup.InitializeAndStartAppGRPCApi(config)
 	setup.InitializeAndStartAppGRPCApi(config)
 }
 
-// func runGatewayServer(config util.Config)
-// {
-
-// }
+func runGatewayServer(config util.Config) {
+	setup.InitializeAndStartGatewayServer(config)
+}

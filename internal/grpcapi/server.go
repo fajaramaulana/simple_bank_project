@@ -29,7 +29,6 @@ func NewServer(store db.Store, authController *controller.AuthController, userCo
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
 
-	log.Println("Initializing server with controllers")
 	server := &Server{
 		// grpcServer:     grpcServer,
 		config:         config,

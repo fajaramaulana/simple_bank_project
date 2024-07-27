@@ -1,15 +1,21 @@
 package setup
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"net"
+	"net/http"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/controller"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/service"
+	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	_ "github.com/lib/pq"
 )
@@ -36,14 +42,8 @@ func DbConnection(config util.Config) *sql.DB {
 
 func InitializeAndStartAppGRPCApi(config util.Config) {
 	conn := DbConnection(config)
-	if conn == nil {
-		log.Fatal("Failed to connect to database")
-	} else {
-		log.Println("Database connection successful")
-	}
 
 	store := db.NewStore(conn)
-	log.Println("Store initialized")
 
 	authService := service.NewAuthService(store, config)
 	authController := controller.NewAuthController(authService)
@@ -55,33 +55,57 @@ func InitializeAndStartAppGRPCApi(config util.Config) {
 	if err != nil {
 		log.Fatal("Cannot create gRPC server: ", err)
 	}
-	log.Println("gRPC server created")
 
 	server.Start(config.GRPCPort)
-	log.Println("gRPC server started")
 }
 
-// func InitializeAndStartGatewayServer(config util.Config) {
-// 	conn := DbConnection(config)
-// 	if conn == nil {
-// 		log.Fatal("Failed to connect to database")
-// 	} else {
-// 		log.Println("Database connection successful")
-// 	}
+func InitializeAndStartGatewayServer(config util.Config) {
+	conn := DbConnection(config)
 
-// 	store := db.NewStore(conn)
-// 	log.Println("Store initialized")
+	store := db.NewStore(conn)
 
-// 	authService := service.NewAuthService(store, config)
-// 	authController := controller.NewAuthController(authService)
+	authService := service.NewAuthService(store, config)
+	authController := controller.NewAuthController(authService)
 
-// 	userService := service.NewUserService(store, config)
-// 	userController := controller.NewUserController(userService)
+	userService := service.NewUserService(store, config)
+	userController := controller.NewUserController(userService)
 
-// 	server, err := grpcapi.NewServer(store, authController, userController, config)
-// 	if err != nil {
-// 		log.Fatal("Cannot create gRPC server: ", err)
-// 	}
+	server, err := grpcapi.NewServer(store, authController, userController, config)
+	if err != nil {
+		log.Fatal("Cannot create gRPC server: ", err)
+	}
 
-// 	grpcMux := runtime.NewServeMux()
-// }
+	jsonOpt := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
+	grpcMux := runtime.NewServeMux(jsonOpt)
+	ctx, cancle := context.WithCancel(context.Background())
+	defer cancle()
+
+	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
+	if err != nil {
+		log.Fatal("Failed to register gRPC server: ", err)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", grpcMux)
+
+	listener, err := net.Listen("tcp", ":"+config.Port)
+	if err != nil {
+		log.Fatal("Failed to listen: ", err)
+	}
+
+	log.Printf("Starting gRPC gateway server on %s", config.Port)
+
+	err = http.Serve(listener, mux)
+	if err != nil {
+		log.Fatal("Failed to serve: ", err)
+	}
+	log.Println("gRPC gateway server started")
+}
