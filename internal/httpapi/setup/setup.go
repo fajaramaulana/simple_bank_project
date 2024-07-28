@@ -17,10 +17,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func CheckingEnv(config util.Config) util.Config {
-	return config
-}
-
+// DbConnection establishes a connection to the database using the provided configuration.
+// It returns a pointer to the sql.DB object representing the database connection.
 func DbConnection(config util.Config) *sql.DB {
 	dbUser := config.DBUser
 	dbPassword := config.DBPassword
@@ -42,9 +40,12 @@ func DbConnection(config util.Config) *sql.DB {
 	return conn
 }
 
-func InitializeAndStartAppHTTPApi(config util.Config) {
-	// / Get environment variables
-	conn := DbConnection(config)
+// InitializeAndStartAppHTTPApi initializes and starts the HTTP API server for the application.
+// It takes a configuration object and a database connection as parameters.
+// If the 'users' table is empty, it inserts default user data into the table.
+// Then, it creates instances of various services, controllers, and the router.
+// Finally, it starts the server on the specified port.
+func InitializeAndStartAppHTTPApi(config util.Config, conn *sql.DB) {
 
 	// checking table user is empty or not and return count
 	var count int
@@ -108,6 +109,10 @@ func InitializeAndStartAppHTTPApi(config util.Config) {
 	server.StartServer(PORT)
 }
 
+// InitializeAndStartAppTest initializes and starts the test application with the given store.
+// It checks environment variables, configures tokens, initializes services and controllers,
+// and creates a router for handling HTTP requests.
+// The function returns a pointer to the initialized router.
 func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
 	// Check environment variables
 
@@ -136,4 +141,9 @@ func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
 	require.NoError(t, err)
 
 	return server
+}
+
+// CheckingEnv checks the environment configuration and returns the provided config.
+func CheckingEnv(config util.Config) util.Config {
+	return config
 }

@@ -16,12 +16,14 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rakyll/statik/fs"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	_ "github.com/fajaramaulana/simple_bank_project/doc/statik"
 	_ "github.com/lib/pq"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
+// DbConnection establishes a connection to the database using the provided configuration.
+// It returns a pointer to the sql.DB object representing the database connection.
 func DbConnection(config util.Config) *sql.DB {
 	dbUser := config.DBUser
 	dbPassword := config.DBPassword
@@ -29,6 +31,7 @@ func DbConnection(config util.Config) *sql.DB {
 	dbPort := config.DBPort
 	dbName := config.DBName
 	dbSSLMode := config.DBSSLMode
+
 	// Create the connection string
 	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
 		dbUser, dbPassword, dbHost, dbPort, dbName, dbSSLMode)
@@ -42,10 +45,18 @@ func DbConnection(config util.Config) *sql.DB {
 	return conn
 }
 
-func InitializeAndStartAppGRPCApi(config util.Config) {
-	conn := DbConnection(config)
-	db.NewStore(conn)
+// GetDbStore returns a new instance of db.Store using the provided configuration and database connection.
+func GetDbStore(config util.Config, conn *sql.DB) db.Store {
 	store := db.NewStore(conn)
+	return store
+}
+
+// InitializeAndStartAppGRPCApi initializes and starts the gRPC API server for the application.
+// It takes a configuration object and a database store as parameters.
+// It creates instances of the required services and controllers,
+// and then creates a gRPC server with the provided store, controllers, and configuration.
+// Finally, it starts the gRPC server on the specified port from the configuration.
+func InitializeAndStartAppGRPCApi(config util.Config, store db.Store) {
 
 	authService := service.NewAuthService(store, config)
 	authController := controller.NewAuthController(authService)
@@ -61,10 +72,16 @@ func InitializeAndStartAppGRPCApi(config util.Config) {
 	server.Start(config.GRPCPort)
 }
 
-func InitializeAndStartGatewayServer(config util.Config) {
-	conn := DbConnection(config)
-
-	store := db.NewStore(conn)
+// InitializeAndStartGatewayServer initializes and starts the gRPC gateway server.
+// It takes a `config` parameter of type `util.Config` which represents the server configuration,
+// and a `store` parameter of type `db.Store` which represents the database store.
+// The function creates instances of the required services and controllers,
+// and then creates a gRPC server using the provided store, auth controller, user controller, and config.
+// It registers the gRPC server with the gateway server and starts serving HTTP requests.
+// The function also serves the Swagger UI using the provided statik file system.
+// It listens on the configured port and logs the server startup message.
+// If any error occurs during the initialization or serving, the function logs the error and exits.
+func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 
 	authService := service.NewAuthService(store, config)
 	authController := controller.NewAuthController(authService)

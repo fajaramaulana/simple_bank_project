@@ -3,12 +3,13 @@ package main
 import (
 	"log"
 
+	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/setup"
-	setuphttp "github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 )
 
 func main() {
+	// Load configuration from file
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal("Cannot load config: ", err)
@@ -19,19 +20,29 @@ func main() {
 		log.Fatal("Environment variables are not properly loaded")
 	}
 
-	go runGatewayServer(config)
-	// go runGinServer(config)
-	rungRPCServer(config)
+	// Establish a database connection
+	conn := setup.DbConnection(config)
+
+	// Create a database store
+	store := setup.GetDbStore(config, conn)
+
+	// Start the gateway server in a separate goroutine
+	go runGatewayServer(config, store)
+
+	// Start the gRPC server
+	rungRPCServer(config, store)
 }
 
-func runGinServer(config util.Config) {
-	setuphttp.InitializeAndStartAppHTTPApi(config)
+// func runGinServer(config util.Config, conn *sql.DB) {
+// 	setuphttp.InitializeAndStartAppHTTPApi(config, conn)
+// }
+
+// rungRPCServer starts the gRPC server using the provided configuration and database store.
+func rungRPCServer(config util.Config, store db.Store) {
+	setup.InitializeAndStartAppGRPCApi(config, store)
 }
 
-func rungRPCServer(config util.Config) {
-	setup.InitializeAndStartAppGRPCApi(config)
-}
-
-func runGatewayServer(config util.Config) {
-	setup.InitializeAndStartGatewayServer(config)
+// runGatewayServer starts the gateway server using the provided configuration and database store.
+func runGatewayServer(config util.Config, store db.Store) {
+	setup.InitializeAndStartGatewayServer(config, store)
 }
