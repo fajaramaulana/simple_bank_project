@@ -19,6 +19,9 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	_ "github.com/fajaramaulana/simple_bank_project/doc/statik"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -135,4 +138,25 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 		log.Fatal("Failed to serve: ", err)
 	}
 	log.Println("gRPC gateway server started")
+}
+
+// InitializeDBMigrations initializes the database migrations using the provided configuration.
+// It creates a new migration instance and performs the necessary database migrations.
+// The function takes a `config` parameter of type `util.Config` which contains the necessary database configuration.
+// It returns no values.
+// If any error occurs during migration creation or migration execution, the function will log a fatal error.
+// If the migration is successful, it will log a message indicating the successful migration.
+func InitializeDBMigrations(config util.Config) {
+	dbConf := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", config.DBUser, config.DBPassword, config.DBHost, config.DBPort, config.DBName, config.DBSSLMode)
+	m, err := migrate.New(config.DBSource, dbConf)
+	if err != nil {
+		log.Fatal("Cannot create migration: ", err)
+	}
+
+	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal("Cannot migrate DB: ", err)
+	}
+	if err != migrate.ErrNoChange {
+		log.Println("DB migration successful")
+	}
 }

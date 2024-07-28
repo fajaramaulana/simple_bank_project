@@ -14,6 +14,7 @@ type Config struct {
 	DBPassword           string        `mapstructure:"DB_PASSWORD"`
 	DBName               string        `mapstructure:"DB_NAME"`
 	DBSSLMode            string        `mapstructure:"DB_SSLMODE"`
+	DBSource             string        `mapstructure:"DB_SOURCE"`
 	Port                 string        `mapstructure:"PORT"`
 	PortGatewayGrpc      string        `mapstructure:"PORT_GATEWAY_GRPC"`
 	GRPCPort             string        `mapstructure:"GRPC_PORT"`
@@ -43,6 +44,7 @@ func LoadConfig(path string) (config Config, err error) {
 		_ = os.Setenv("DB_PASSWORD", viper.GetString("DB_PASSWORD"))
 		_ = os.Setenv("DB_NAME", viper.GetString("DB_NAME"))
 		_ = os.Setenv("DB_SSLMODE", viper.GetString("DB_SSLMODE"))
+		_ = os.Setenv("DB_SOURCE", viper.GetString("DB_SOURCE"))
 		_ = os.Setenv("PORT", viper.GetString("PORT"))
 		_ = os.Setenv("PORT_GATEWAY_GRPC", viper.GetString("PORT_GATEWAY_GRPC"))
 		_ = os.Setenv("GRPC_PORT", viper.GetString("GRPC_PORT"))
@@ -62,6 +64,7 @@ func LoadConfig(path string) (config Config, err error) {
 		viper.BindEnv("DB_PASSWORD")
 		viper.BindEnv("DB_NAME")
 		viper.BindEnv("DB_SSLMODE")
+		viper.BindEnv("DB_SOURCE")
 		viper.BindEnv("PORT")
 		viper.BindEnv("PORT_GATEWAY_GRPC")
 		viper.BindEnv("GRPC_PORT")
