@@ -20,7 +20,7 @@ func main() {
 	}
 
 	go runGatewayServer(config)
-	go runGinServer(config)
+	// go runGinServer(config)
 	rungRPCServer(config)
 }
 

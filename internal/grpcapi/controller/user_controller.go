@@ -3,6 +3,8 @@ package controller
 import (
 	"context"
 
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/handler/validate"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/service"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 )
@@ -17,6 +19,12 @@ func NewUserController(userService *service.UserService) *UserController {
 }
 
 func (c *UserController) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserRespose, error) {
+	violations := validate.ValidateCreateUserRequest(req)
+
+	if violations != nil {
+		return nil, helper.InvalidArgumentError(violations)
+	}
+
 	res, err := c.userService.CreateUser(ctx, req)
 	if err != nil {
 		return nil, err
