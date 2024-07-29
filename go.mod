@@ -1,6 +1,6 @@
 module github.com/fajaramaulana/simple_bank_project
 
-go 1.20
+go 1.22.5
 
 // toolchain go1.22.5
 
