@@ -1,7 +1,10 @@
 package main
 
 import (
-	"log"
+	"os"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/setup"
@@ -12,12 +15,16 @@ func main() {
 	// Load configuration from file
 	config, err := util.LoadConfig(".")
 	if err != nil {
-		log.Fatal("Cannot load config: ", err)
+		log.Fatal().Err(err).Msg("Cannot load config")
 	}
 
 	// Check if essential configuration values are set
 	if config.DBUser == "" || config.DBPassword == "" || config.DBName == "" {
-		log.Fatal("Environment variables are not properly loaded")
+		log.Fatal().Msg("Environment variables are not properly loaded")
+	}
+
+	if config.Environment == "development" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	// Establish a database connection

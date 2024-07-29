@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/controller"
@@ -42,7 +43,7 @@ func DbConnection(config util.Config) *sql.DB {
 	conn, err := sql.Open("postgres", connStr)
 
 	if err != nil {
-		log.Fatal("Cannot connect to DB: ", err)
+		log.Fatal().Err(err).Msg("Cannot open a connection to the database")
 	}
 
 	return conn
@@ -69,7 +70,7 @@ func InitializeAndStartAppGRPCApi(config util.Config, store db.Store) {
 
 	server, err := server.NewServer(store, authController, userController, config)
 	if err != nil {
-		log.Fatal("Cannot create gRPC server: ", err)
+		log.Fatal().Err(err).Msg("Cannot create gRPC server")
 	}
 
 	server.Start(config.GRPCPort)
@@ -94,7 +95,7 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 
 	server, err := server.NewServer(store, authController, userController, config)
 	if err != nil {
-		log.Fatal("Cannot create gRPC server: ", err)
+		log.Fatal().Err(err).Msg("Cannot create gRPC server")
 	}
 
 	jsonOpt := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
@@ -112,7 +113,7 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 
 	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
 	if err != nil {
-		log.Fatal("Failed to register gRPC server: ", err)
+		log.Fatal().Err(err).Msg("Cannot register gRPC server")
 	}
 
 	mux := http.NewServeMux()
@@ -120,7 +121,7 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 
 	statikFS, err := fs.New()
 	if err != nil {
-		log.Fatal("Cannot create statik file system: ", err)
+		log.Fatal().Err(err).Msg("Cannot create statik file system")
 	}
 
 	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
@@ -128,16 +129,16 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 
 	listener, err := net.Listen("tcp", ":"+config.PortGatewayGrpc)
 	if err != nil {
-		log.Fatal("Failed to listen: ", err)
+		log.Fatal().Err(err).Msg("Cannot listen to the port")
 	}
 
 	log.Printf("Starting gRPC gateway server on %s", config.PortGatewayGrpc)
 
 	err = http.Serve(listener, mux)
 	if err != nil {
-		log.Fatal("Failed to serve: ", err)
+		log.Fatal().Err(err).Msg("Cannot start gRPC gateway server")
 	}
-	log.Println("gRPC gateway server started")
+	log.Info().Msg("gRPC gateway server started")
 }
 
 // InitializeDBMigrations initializes the database migrations using the provided configuration.
@@ -150,13 +151,13 @@ func InitializeDBMigrations(config util.Config) {
 	dbConf := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", config.DBUser, config.DBPassword, config.DBHost, config.DBPort, config.DBName, config.DBSSLMode)
 	m, err := migrate.New(config.DBSource, dbConf)
 	if err != nil {
-		log.Fatal("Cannot create migration: ", err)
+		log.Fatal().Err(err).Msg("Cannot create migration")
 	}
 
 	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatal("Cannot migrate DB: ", err)
+		log.Fatal().Err(err).Msg("Cannot migrate the database")
 	}
 	if err != migrate.ErrNoChange {
-		log.Println("DB migration successful")
+		log.Info().Msg("Database migration successful")
 	}
 }
