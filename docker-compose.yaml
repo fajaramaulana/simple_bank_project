@@ -36,6 +36,7 @@ services:
       - TOKEN_SYMMETRIC_KEY=f249578459530d4130f56e7ea64f8107
       - ACCESS_TOKEN_DURATION=15m
       - REFRESH_TOKEN_DURATION=24h
+      - ENVIROMENT=development
     depends_on:
       - postgres
     entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]

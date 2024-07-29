@@ -21,6 +21,7 @@ type Config struct {
 	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	Environment          string        `mapstructure:"ENVIROMENT"`
 }
 
 // LoadConfig reads configuration from file or environment variables.
@@ -51,6 +52,7 @@ func LoadConfig(path string) (config Config, err error) {
 		_ = os.Setenv("TOKEN_SYMMETRIC_KEY", viper.GetString("TOKEN_SYMMETRIC_KEY"))
 		_ = os.Setenv("ACCESS_TOKEN_DURATION", viper.GetString("ACCESS_TOKEN_DURATION"))
 		_ = os.Setenv("REFRESH_TOKEN_DURATION", viper.GetString("REFRESH_TOKEN_DURATION"))
+		_ = os.Setenv("ENVIROMENT", viper.GetString("ENVIROMENT"))
 
 		err = viper.Unmarshal(&config)
 		return config, err
@@ -71,6 +73,7 @@ func LoadConfig(path string) (config Config, err error) {
 		viper.BindEnv("TOKEN_SYMMETRIC_KEY")
 		viper.BindEnv("ACCESS_TOKEN_DURATION")
 		viper.BindEnv("REFRESH_TOKEN_DURATION")
+		viper.BindEnv("ENVIROMENT")
 
 		// Unmarshal the config into the struct
 		err = viper.Unmarshal(&config)
