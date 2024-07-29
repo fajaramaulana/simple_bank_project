@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
@@ -78,6 +80,93 @@ func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 			Balance:     userCreate.Account.Balance,
 			CreatedAt:   timestamppb.New(time.Now()),
 		},
+	}
+
+	return res, nil
+}
+
+func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+	uuidUser, err := helper.ConvertStringToUUID(req.GetUserUuid())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user_uuid: %v", err)
+	}
+
+	_, err = s.db.GetUserByUserUUID(ctx, uuidUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get user by user_uuid: %v", err)
+	}
+
+	checkEmail, err := s.db.GetUserByEmail(ctx, req.GetEmail())
+	if err != nil {
+		if err.Error() != "sql: no rows in result set" {
+			return nil, status.Errorf(codes.Internal, "failed to get user by email: %v", err)
+		}
+	}
+
+	if len(checkEmail.Email) > 0 && checkEmail.UserUuid != uuidUser {
+		return nil, status.Errorf(codes.AlreadyExists, "email already exists")
+	}
+	arg := db.UpdateUserParams{
+		UserUuid: uuidUser,
+		Email: sql.NullString{
+			String: req.GetEmail(),
+			Valid:  req.Email != nil,
+		},
+		FullName: sql.NullString{
+			String: req.GetFullName(),
+			Valid:  req.FullName != nil,
+		},
+	}
+
+	if req.Password != nil {
+		hashPass, err := util.MakePasswordBcrypt(req.GetPassword())
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to hash password: %v", err)
+		}
+
+		arg.HashedPassword = sql.NullString{
+			String: hashPass,
+			Valid:  true,
+		}
+		arg.PasswordChangedAt = sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		}
+	}
+
+	userUpdate, err := s.db.UpdateUser(ctx, arg)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to update user: %v", err)
+	}
+
+	// list acocunt by user_uuid
+	accounts, err := s.db.GetAccountByUserUUIDMany(ctx, userUpdate.UserUuid)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get account by user_uuid: %v", err)
+	}
+
+	if len(accounts) == 0 {
+		return nil, status.Errorf(codes.Internal, "account not found")
+	}
+
+	// convert accounts to []*Account
+	accountsRes := make([]*pb.Account, 0)
+	for _, account := range accounts {
+		accountsRes = append(accountsRes, &pb.Account{
+			AccountUuid: account.AccountUuid.String(),
+			Owner:       account.Owner,
+			Currency:    account.Currency,
+			Balance:     account.Balance,
+			CreatedAt:   timestamppb.New(account.CreatedAt),
+		})
+	}
+
+	res := &pb.UpdateUserResponse{
+		UserUuid: userUpdate.UserUuid.String(),
+		Username: userUpdate.Username,
+		Email:    userUpdate.Email,
+		FullName: userUpdate.FullName,
+		Account:  accountsRes,
 	}
 
 	return res, nil
