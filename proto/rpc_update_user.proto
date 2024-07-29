@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package pb;
+
+import "account.proto";
+
+option go_package = "github.com/fajaramaulana/simple_bank_project/pb";
+
+message UpdateUserRequest {
+    string user_uuid = 1;
+    optional string username = 2;
+    optional string password = 3;
+    optional string email = 4;
+    optional string full_name = 5;
+}
+
+message UpdateUserResponse {
+    string user_uuid = 1;
+    string username = 2;
+    string email = 3;
+    string full_name = 4;
+    repeated Account account = 5;
+}
