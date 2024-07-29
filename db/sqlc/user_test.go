@@ -74,6 +74,20 @@ func TestUpdatePassword(t *testing.T) {
 	require.Equal(t, arg.UserUuid, updatedUser.UserUuid)
 }
 
+func TestUpdateUserFullName(t *testing.T) {
+	user := GenerateUser(t)
+
+	res, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+		UserUuid: user.UserUuid,
+		FullName: sql.NullString{String: "New Name", Valid: true},
+	})
+
+	require.NoError(t, err)
+	require.NotEqual(t, user.FullName, res.FullName)
+	require.Equal(t, "New Name", res.FullName)
+	require.Equal(t, user.Email, res.Email)
+}
+
 func GenerateUser(t *testing.T) CreateUserRow {
 	password, err := util.MakePasswordBcrypt("P4ssw0rd!")
 	require.NoError(t, err)
