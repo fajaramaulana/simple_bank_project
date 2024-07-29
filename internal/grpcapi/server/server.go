@@ -7,7 +7,7 @@ import (
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/controller"
-	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"google.golang.org/grpc"
