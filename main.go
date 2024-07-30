@@ -1,31 +1,57 @@
 package main
 
 import (
-	"log"
+	"os"
 
-	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+
+	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 )
 
 func main() {
+	// Load configuration from file
 	config, err := util.LoadConfig(".")
 	if err != nil {
-		log.Fatal("Cannot load config: ", err)
+		log.Fatal().Err(err).Msg("Cannot load config")
 	}
 
 	// Check if essential configuration values are set
 	if config.DBUser == "" || config.DBPassword == "" || config.DBName == "" {
-		log.Fatal("Environment variables are not properly loaded")
+		log.Fatal().Msg("Environment variables are not properly loaded")
 	}
 
-	// runGinServer(config)
-	rungRPCServer(config)
+	if config.Environment == "development" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
+	// Establish a database connection
+	conn := setup.DbConnection(config)
+
+	// Create a database store
+	store := setup.GetDbStore(config, conn)
+
+	setup.InitializeDBMigrations(config)
+
+	// Start the gateway server in a separate goroutine
+	go runGatewayServer(config, store)
+
+	// Start the gRPC server
+	rungRPCServer(config, store)
 }
 
-// func runGinServer(config util.Config) {
-// 	setup.InitializeAndStartApp(config)
+// func runGinServer(config util.Config, conn *sql.DB) {
+// 	setuphttp.InitializeAndStartAppHTTPApi(config, conn)
 // }
 
-func rungRPCServer(config util.Config) {
-	setup.InitializeAndStartAppGRPCApi(config)
+// rungRPCServer starts the gRPC server using the provided configuration and database store.
+func rungRPCServer(config util.Config, store db.Store) {
+	setup.InitializeAndStartAppGRPCApi(config, store)
+}
+
+// runGatewayServer starts the gateway server using the provided configuration and database store.
+func runGatewayServer(config util.Config, store db.Store) {
+	setup.InitializeAndStartGatewayServer(config, store)
 }

@@ -23,6 +23,7 @@ type Querier interface {
 	GetAccountByUUID(ctx context.Context, accountUuid uuid.UUID) (GetAccountByUUIDRow, error)
 	GetAccountByUserUUID(ctx context.Context, userUuid uuid.UUID) (GetAccountByUserUUIDRow, error)
 	GetAccountByUserUUIDAndCurrency(ctx context.Context, arg GetAccountByUserUUIDAndCurrencyParams) (GetAccountByUserUUIDAndCurrencyRow, error)
+	GetAccountByUserUUIDMany(ctx context.Context, userUuid uuid.UUID) ([]GetAccountByUserUUIDManyRow, error)
 	GetAccountForUpdate(ctx context.Context, id int64) (GetAccountForUpdateRow, error)
 	GetDetailLoginByUsername(ctx context.Context, username string) (GetDetailLoginByUsernameRow, error)
 	GetEntry(ctx context.Context, id int64) (Entry, error)

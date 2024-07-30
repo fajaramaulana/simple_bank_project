@@ -35,6 +35,7 @@ jobs:
         echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
         echo "DB_SSLMODE=${{ secrets.DB_SSLMODE }}" >> $GITHUB_ENV
         echo "PORT=${{ secrets.PORT }}" >> $GITHUB_ENV
+        echo "PORT_GATEWAY_GRPC=${{ secrets.PORT_GATEWAY_GRPC }}" >> $GITHUB_ENV
         echo "GRPC_PORT=${{ secrets.GRPC_PORT }}" >> $GITHUB_ENV
         echo "TOKEN_SYMMETRIC_KEY=${{ secrets.TOKEN_SYMMETRIC_KEY }}" >> $GITHUB_ENV
         echo "ACCESS_TOKEN_DURATION=${{ secrets.ACCESS_TOKEN_DURATION }}" >> $GITHUB_ENV
@@ -43,10 +44,10 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v4
 
-    - name: Set up Go 1.20
+    - name: Set up Go 1.22.5
       uses: actions/setup-go@v4
       with:
-        go-version: '1.20'
+        go-version: '1.22.5'
       id: go
 
     - name: Install golang-migrate

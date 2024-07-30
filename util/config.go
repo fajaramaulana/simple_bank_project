@@ -14,11 +14,14 @@ type Config struct {
 	DBPassword           string        `mapstructure:"DB_PASSWORD"`
 	DBName               string        `mapstructure:"DB_NAME"`
 	DBSSLMode            string        `mapstructure:"DB_SSLMODE"`
+	DBSource             string        `mapstructure:"DB_SOURCE"`
 	Port                 string        `mapstructure:"PORT"`
+	PortGatewayGrpc      string        `mapstructure:"PORT_GATEWAY_GRPC"`
 	GRPCPort             string        `mapstructure:"GRPC_PORT"`
 	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	Environment          string        `mapstructure:"ENVIROMENT"`
 }
 
 // LoadConfig reads configuration from file or environment variables.
@@ -42,11 +45,14 @@ func LoadConfig(path string) (config Config, err error) {
 		_ = os.Setenv("DB_PASSWORD", viper.GetString("DB_PASSWORD"))
 		_ = os.Setenv("DB_NAME", viper.GetString("DB_NAME"))
 		_ = os.Setenv("DB_SSLMODE", viper.GetString("DB_SSLMODE"))
+		_ = os.Setenv("DB_SOURCE", viper.GetString("DB_SOURCE"))
 		_ = os.Setenv("PORT", viper.GetString("PORT"))
+		_ = os.Setenv("PORT_GATEWAY_GRPC", viper.GetString("PORT_GATEWAY_GRPC"))
 		_ = os.Setenv("GRPC_PORT", viper.GetString("GRPC_PORT"))
 		_ = os.Setenv("TOKEN_SYMMETRIC_KEY", viper.GetString("TOKEN_SYMMETRIC_KEY"))
 		_ = os.Setenv("ACCESS_TOKEN_DURATION", viper.GetString("ACCESS_TOKEN_DURATION"))
 		_ = os.Setenv("REFRESH_TOKEN_DURATION", viper.GetString("REFRESH_TOKEN_DURATION"))
+		_ = os.Setenv("ENVIROMENT", viper.GetString("ENVIROMENT"))
 
 		err = viper.Unmarshal(&config)
 		return config, err
@@ -60,11 +66,14 @@ func LoadConfig(path string) (config Config, err error) {
 		viper.BindEnv("DB_PASSWORD")
 		viper.BindEnv("DB_NAME")
 		viper.BindEnv("DB_SSLMODE")
+		viper.BindEnv("DB_SOURCE")
 		viper.BindEnv("PORT")
+		viper.BindEnv("PORT_GATEWAY_GRPC")
 		viper.BindEnv("GRPC_PORT")
 		viper.BindEnv("TOKEN_SYMMETRIC_KEY")
 		viper.BindEnv("ACCESS_TOKEN_DURATION")
 		viper.BindEnv("REFRESH_TOKEN_DURATION")
+		viper.BindEnv("ENVIROMENT")
 
 		// Unmarshal the config into the struct
 		err = viper.Unmarshal(&config)

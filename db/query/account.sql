@@ -25,6 +25,10 @@ WHERE deleted_at IS NULL AND user_uuid = $1 AND currency = $2 LIMIT 1;
 SELECT id, owner, currency, balance, user_uuid, created_at, account_uuid, updated_at, deleted_at, status FROM accounts
 WHERE deleted_at IS NULL AND user_uuid = $1 LIMIT 1;
 
+-- name: GetAccountByUserUUIDMany :many
+SELECT id, owner, currency, balance, user_uuid, created_at, account_uuid, updated_at, deleted_at, status FROM accounts
+WHERE deleted_at IS NULL AND user_uuid = $1;
+
 -- name: GetAccountForUpdate :one
 SELECT id, owner,  currency, balance, user_uuid, created_at, account_uuid, updated_at, deleted_at, status FROM accounts
 WHERE deleted_at IS NULL AND id = $1 LIMIT 1

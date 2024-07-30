@@ -4,28 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net"
 	"testing"
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/controller"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/router"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/service"
-	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 
 	_ "github.com/lib/pq"
 )
 
-func CheckingEnv(config util.Config) util.Config {
-	return config
-}
-
+// DbConnection establishes a connection to the database using the provided configuration.
+// It returns a pointer to the sql.DB object representing the database connection.
 func DbConnection(config util.Config) *sql.DB {
 	dbUser := config.DBUser
 	dbPassword := config.DBPassword
@@ -47,9 +40,12 @@ func DbConnection(config util.Config) *sql.DB {
 	return conn
 }
 
-func InitializeAndStartApp(config util.Config) {
-	// / Get environment variables
-	conn := DbConnection(config)
+// InitializeAndStartAppHTTPApi initializes and starts the HTTP API server for the application.
+// It takes a configuration object and a database connection as parameters.
+// If the 'users' table is empty, it inserts default user data into the table.
+// Then, it creates instances of various services, controllers, and the router.
+// Finally, it starts the server on the specified port.
+func InitializeAndStartAppHTTPApi(config util.Config, conn *sql.DB) {
 
 	// checking table user is empty or not and return count
 	var count int
@@ -113,6 +109,10 @@ func InitializeAndStartApp(config util.Config) {
 	server.StartServer(PORT)
 }
 
+// InitializeAndStartAppTest initializes and starts the test application with the given store.
+// It checks environment variables, configures tokens, initializes services and controllers,
+// and creates a router for handling HTTP requests.
+// The function returns a pointer to the initialized router.
 func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
 	// Check environment variables
 
@@ -143,60 +143,7 @@ func InitializeAndStartAppTest(t *testing.T, store db.Store) *router.Router {
 	return server
 }
 
-func InitializeAndStartAppGRPCApi(config util.Config) {
-	// / Get environment variables
-	conn := DbConnection(config)
-
-	// checking table user is empty or not and return count
-	var count int
-	row := conn.QueryRow("SELECT COUNT(*) FROM users")
-	err := row.Scan(&count)
-	if err != nil {
-		log.Fatal("Cannot check table users: ", err)
-	}
-
-	if count == 0 {
-		defaultPass, err := util.MakePasswordBcrypt("Passw0rd!")
-		if err != nil {
-			log.Fatal("Cannot create password: ", err)
-		}
-
-		// insert data to table user
-		queries := []string{
-			"INSERT INTO users (username, full_name, email, hashed_password, role) VALUES ('admin', 'administrator', 'admin@simplebank.org', '" + defaultPass + "', 'admin')",
-			"INSERT INTO users (username, full_name, email, hashed_password, role) VALUES ('user', 'customer', 'fajar1@gmail.com', '" + defaultPass + "', 'customer')",
-		}
-
-		for _, query := range queries {
-			_, err := conn.Exec(query)
-			if err != nil {
-				log.Fatal("Cannot insert data to DB: ", err)
-			}
-		}
-	}
-
-	// Create a new store
-	store := db.NewStore(conn)
-
-	server, err := grpcapi.NewServer(config, store)
-	if err != nil {
-		log.Fatal("Cannot create server: ", err)
-	}
-
-	grpcServer := grpc.NewServer()
-
-	pb.RegisterSimpleBankServer(grpcServer, server)
-	reflection.Register(grpcServer)
-
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", config.GRPCPort))
-
-	if err != nil {
-		log.Fatal("Cannot listen to port: ", err)
-	}
-
-	log.Printf("Starting gRPC server on port %s", config.GRPCPort)
-	err = grpcServer.Serve(listener)
-	if err != nil {
-		log.Fatal("Cannot start gRPC server: ", err)
-	}
+// CheckingEnv checks the environment configuration and returns the provided config.
+func CheckingEnv(config util.Config) util.Config {
+	return config
 }

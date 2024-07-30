@@ -280,6 +280,58 @@ func (q *Queries) GetAccountByUserUUIDAndCurrency(ctx context.Context, arg GetAc
 	return i, err
 }
 
+const getAccountByUserUUIDMany = `-- name: GetAccountByUserUUIDMany :many
+SELECT id, owner, currency, balance, user_uuid, created_at, account_uuid, updated_at, deleted_at, status FROM accounts
+WHERE deleted_at IS NULL AND user_uuid = $1
+`
+
+type GetAccountByUserUUIDManyRow struct {
+	ID          int64        `json:"id"`
+	Owner       string       `json:"owner"`
+	Currency    string       `json:"currency"`
+	Balance     string       `json:"balance"`
+	UserUuid    uuid.UUID    `json:"user_uuid"`
+	CreatedAt   time.Time    `json:"created_at"`
+	AccountUuid uuid.UUID    `json:"account_uuid"`
+	UpdatedAt   sql.NullTime `json:"updated_at"`
+	DeletedAt   sql.NullTime `json:"deleted_at"`
+	Status      int16        `json:"status"`
+}
+
+func (q *Queries) GetAccountByUserUUIDMany(ctx context.Context, userUuid uuid.UUID) ([]GetAccountByUserUUIDManyRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAccountByUserUUIDMany, userUuid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAccountByUserUUIDManyRow{}
+	for rows.Next() {
+		var i GetAccountByUserUUIDManyRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Owner,
+			&i.Currency,
+			&i.Balance,
+			&i.UserUuid,
+			&i.CreatedAt,
+			&i.AccountUuid,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAccountForUpdate = `-- name: GetAccountForUpdate :one
 SELECT id, owner,  currency, balance, user_uuid, created_at, account_uuid, updated_at, deleted_at, status FROM accounts
 WHERE deleted_at IS NULL AND id = $1 LIMIT 1
