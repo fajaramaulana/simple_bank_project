@@ -6,6 +6,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -32,6 +33,7 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserByUserUUID(ctx context.Context, userUuid uuid.UUID) (GetUserByUserUUIDRow, error)
 	GetUserByUsername(ctx context.Context, username string) (GetUserByUsernameRow, error)
+	GetUserByVerificationEmailCode(ctx context.Context, verificationEmailCode sql.NullString) (GetUserByVerificationEmailCodeRow, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListAccountsByUserUUID(ctx context.Context, arg ListAccountsByUserUUIDParams) ([]ListAccountsByUserUUIDRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]Entry, error)
@@ -42,6 +44,7 @@ type Querier interface {
 	UpdateProfileAccount(ctx context.Context, arg UpdateProfileAccountParams) (UpdateProfileAccountRow, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (UpdateUserRow, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (UpdateUserPasswordRow, error)
+	UpdateUserVerificationEmail(ctx context.Context, arg UpdateUserVerificationEmailParams) (UpdateUserVerificationEmailRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

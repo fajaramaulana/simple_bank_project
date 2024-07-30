@@ -59,3 +59,12 @@ WHERE user_uuid = sqlc.arg(user_uuid) RETURNING user_uuid, username, full_name, 
  UPDATE users
 SET hashed_password = COALESCE(sqlc.narg(hashed_password), hashed_password), password_changed_at = COALESCE(sqlc.narg(password_changed_at), password_changed_at)
 WHERE user_uuid = sqlc.arg(user_uuid) RETURNING user_uuid, username, full_name, email, role, created_at, updated_at, deleted_at;
+
+
+-- name: UpdateUserVerificationEmail :one
+UPDATE users
+SET verification_email_code = $1, verification_email_expired_at = $2, verified_email_at = $3
+WHERE user_uuid = $4 RETURNING user_uuid, verification_email_code, verification_email_expired_at;
+
+-- name: GetUserByVerificationEmailCode :one
+SELECT user_uuid, verification_email_code, verification_email_expired_at, verified_email_at FROM users WHERE  verification_email_code = $1 LIMIT 1;

@@ -60,8 +60,8 @@ func ValidatePassword(value string) error {
 		return err
 	}
 
-	// only alphanumeric
-	if err := helper.ValidateAlphanum(value); err != nil {
+	// only "^[a-zA-Z0-9!@#$%^&*()_+]+$"
+	if err := helper.ValidatePasswordCustom(value); err != nil {
 		return err
 	}
 	return nil

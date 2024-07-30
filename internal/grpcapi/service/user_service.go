@@ -10,18 +10,21 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type UserService struct {
-	db     db.Store
-	config util.Config
+	db          db.Store
+	config      util.Config
+	redisClient *redis.Client
 }
 
-func NewUserService(db db.Store, config util.Config) *UserService {
-	return &UserService{db: db, config: config}
+func NewUserService(db db.Store, config util.Config, redisClient *redis.Client) *UserService {
+	return &UserService{db: db, config: config, redisClient: redisClient}
 }
 
 func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserRespose, error) {
@@ -63,6 +66,44 @@ func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	userCreate, err := s.db.CreateUserWithAccountTx(ctx, arg)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
+	}
+
+	// make verification code and save to redis
+
+	verificationCode := uuid.New().String()
+
+	uuidUser, err := helper.ConvertStringToUUID(userCreate.User.UserUUID)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user_uuid: %v", err)
+	}
+
+	argVerCode := db.UpdateUserVerificationEmailParams{
+		UserUuid: uuidUser,
+		VerificationEmailCode: sql.NullString{
+			String: verificationCode,
+			Valid:  true,
+		},
+		VerificationEmailExpiredAt: sql.NullTime{
+			Time:  time.Now().Add(time.Minute * 15),
+			Valid: true,
+		},
+	}
+
+	result, err := s.db.UpdateUserVerificationEmail(ctx, argVerCode)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to update user verification email: %v", err)
+	}
+
+	// insert to redis
+	keyRedis := "verification_email:users:" + userCreate.User.UserUUID
+	valueRedis := map[string]interface{}{
+		"verification_code": verificationCode,
+		"expired_at":        result.VerificationEmailExpiredAt,
+		"email":             userCreate.User.Email,
+	}
+	_, err = s.redisClient.HSet(ctx, keyRedis, valueRedis).Result()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to set verification code in Redis: %v", err)
 	}
 
 	res := &pb.CreateUserRespose{

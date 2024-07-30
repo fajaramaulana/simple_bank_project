@@ -11,6 +11,7 @@ package mockdb
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
@@ -372,6 +373,21 @@ func (mr *MockStoreMockRecorder) GetUserByUsername(arg0, arg1 any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByUsername", reflect.TypeOf((*MockStore)(nil).GetUserByUsername), arg0, arg1)
 }
 
+// GetUserByVerificationEmailCode mocks base method.
+func (m *MockStore) GetUserByVerificationEmailCode(arg0 context.Context, arg1 sql.NullString) (db.GetUserByVerificationEmailCodeRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByVerificationEmailCode", arg0, arg1)
+	ret0, _ := ret[0].(db.GetUserByVerificationEmailCodeRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByVerificationEmailCode indicates an expected call of GetUserByVerificationEmailCode.
+func (mr *MockStoreMockRecorder) GetUserByVerificationEmailCode(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByVerificationEmailCode", reflect.TypeOf((*MockStore)(nil).GetUserByVerificationEmailCode), arg0, arg1)
+}
+
 // ListAccounts mocks base method.
 func (m *MockStore) ListAccounts(arg0 context.Context, arg1 db.ListAccountsParams) ([]db.ListAccountsRow, error) {
 	m.ctrl.T.Helper()
@@ -534,4 +550,19 @@ func (m *MockStore) UpdateUserPassword(arg0 context.Context, arg1 db.UpdateUserP
 func (mr *MockStoreMockRecorder) UpdateUserPassword(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPassword", reflect.TypeOf((*MockStore)(nil).UpdateUserPassword), arg0, arg1)
+}
+
+// UpdateUserVerificationEmail mocks base method.
+func (m *MockStore) UpdateUserVerificationEmail(arg0 context.Context, arg1 db.UpdateUserVerificationEmailParams) (db.UpdateUserVerificationEmailRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserVerificationEmail", arg0, arg1)
+	ret0, _ := ret[0].(db.UpdateUserVerificationEmailRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUserVerificationEmail indicates an expected call of UpdateUserVerificationEmail.
+func (mr *MockStoreMockRecorder) UpdateUserVerificationEmail(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserVerificationEmail", reflect.TypeOf((*MockStore)(nil).UpdateUserVerificationEmail), arg0, arg1)
 }

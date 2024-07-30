@@ -47,7 +47,8 @@ func (c *UserController) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 		return nil, err
 	}
 
-	err = middleware.CheckRole(payload, "admin")
+	allowedRole := []string{"admin", "superadmin"}
+	err = middleware.CheckRole(payload, allowedRole)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to check role")
 		return nil, helper.UnauthenticatedError(err)

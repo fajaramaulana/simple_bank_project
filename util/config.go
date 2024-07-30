@@ -22,6 +22,13 @@ type Config struct {
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 	Environment          string        `mapstructure:"ENVIROMENT"`
+	RedisPort            string        `mapstructure:"REDIS_PORT"`
+	RedisHost            string        `mapstructure:"REDIS_HOST"`
+	RedisDB              string        `mapstructure:"REDIS_DB"`
+	MailHost             string        `mapstructure:"MAIL_HOST"`
+	MailPort             int           `mapstructure:"MAIL_PORT"`
+	MailUser             string        `mapstructure:"MAIL_USER"`
+	MailPassword         string        `mapstructure:"MAIL_PASSWORD"`
 }
 
 // LoadConfig reads configuration from file or environment variables.
@@ -53,6 +60,13 @@ func LoadConfig(path string) (config Config, err error) {
 		_ = os.Setenv("ACCESS_TOKEN_DURATION", viper.GetString("ACCESS_TOKEN_DURATION"))
 		_ = os.Setenv("REFRESH_TOKEN_DURATION", viper.GetString("REFRESH_TOKEN_DURATION"))
 		_ = os.Setenv("ENVIROMENT", viper.GetString("ENVIROMENT"))
+		_ = os.Setenv("REDIS_PORT", viper.GetString("REDIS_PORT"))
+		_ = os.Setenv("REDIS_HOST", viper.GetString("REDIS_HOST"))
+		_ = os.Setenv("REDIS_DB", viper.GetString("REDIS_DB"))
+		_ = os.Setenv("MAIL_HOST", viper.GetString("MAIL_HOST"))
+		_ = os.Setenv("MAIL_PORT", viper.GetString("MAIL_PORT"))
+		_ = os.Setenv("MAIL_USER", viper.GetString("MAIL_USER"))
+		_ = os.Setenv("MAIL_PASSWORD", viper.GetString("MAIL_PASSWORD"))
 
 		err = viper.Unmarshal(&config)
 		return config, err
@@ -74,6 +88,13 @@ func LoadConfig(path string) (config Config, err error) {
 		viper.BindEnv("ACCESS_TOKEN_DURATION")
 		viper.BindEnv("REFRESH_TOKEN_DURATION")
 		viper.BindEnv("ENVIROMENT")
+		viper.BindEnv("REDIS_PORT")
+		viper.BindEnv("REDIS_HOST")
+		viper.BindEnv("REDIS_DB")
+		viper.BindEnv("MAIL_HOST")
+		viper.BindEnv("MAIL_PORT")
+		viper.BindEnv("MAIL_USER")
+		viper.BindEnv("MAIL_PASSWORD")
 
 		// Unmarshal the config into the struct
 		err = viper.Unmarshal(&config)

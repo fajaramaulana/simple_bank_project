@@ -99,3 +99,38 @@ func (s *AuthService) LoginUser(ctx context.Context, req *pb.LoginUserRequest, m
 
 	return res, nil
 }
+
+func (s *AuthService) VerifyUserEmail(ctx context.Context, req *pb.VerifyEmailRequest) (*pb.VerifyEmailResponse, error) {
+	checkVerCode, err := s.db.GetUserByVerificationEmailCode(ctx, sql.NullString{String: req.GetVerificationCode(), Valid: true})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, status.Errorf(codes.NotFound, "verification code not found")
+		}
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	if checkVerCode.VerificationEmailExpiredAt.Time.Before(time.Now()) {
+		return nil, status.Error(codes.InvalidArgument, "verification code is expired")
+	}
+	if checkVerCode.VerifiedEmailAt.String() != "0001-01-01 00:00:00 +0000 UTC" {
+		return nil, status.Error(codes.InvalidArgument, "email already verified")
+	}
+
+	_, err = s.db.UpdateUserVerificationEmail(ctx, db.UpdateUserVerificationEmailParams{
+		VerificationEmailCode:      sql.NullString{String: req.GetVerificationCode(), Valid: true},
+		UserUuid:                   checkVerCode.UserUuid,
+		VerificationEmailExpiredAt: sql.NullTime{Time: checkVerCode.VerificationEmailExpiredAt.Time, Valid: true},
+		VerifiedEmailAt:            time.Now(),
+	})
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot update user verification email: %v", err)
+	}
+
+	res := &pb.VerifyEmailResponse{
+		Message: "Email verified successfully",
+	}
+
+	return res, nil
+
+}

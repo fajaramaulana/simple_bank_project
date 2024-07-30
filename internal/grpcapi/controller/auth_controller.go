@@ -34,3 +34,19 @@ func (c *AuthController) LoginUser(ctx context.Context, req *pb.LoginUserRequest
 
 	return res, nil
 }
+
+func (c *AuthController) VerifyEmail(ctx context.Context, req *pb.VerifyEmailRequest) (*pb.VerifyEmailResponse, error) {
+	violdations := validate.ValidateVerifyEmailUserRequest(req)
+	if violdations != nil {
+		log.Err(helper.InvalidArgumentError(violdations)).Msg("VerifyEmailRequest is invalid")
+		return nil, helper.InvalidArgumentError(violdations)
+	}
+
+	res, err := c.authService.VerifyUserEmail(ctx, req)
+	if err != nil {
+		log.Err(err).Msg("Failed to verify email")
+		return nil, err
+	}
+
+	return res, nil
+}

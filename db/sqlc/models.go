@@ -59,15 +59,18 @@ type Transaction struct {
 }
 
 type User struct {
-	ID                int64     `json:"id"`
-	UserUuid          uuid.UUID `json:"user_uuid"`
-	Username          string    `json:"username"`
-	HashedPassword    string    `json:"hashed_password"`
-	FullName          string    `json:"full_name"`
-	Email             string    `json:"email"`
-	PasswordChangedAt time.Time `json:"password_changed_at"`
-	Role              string    `json:"role"`
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
-	DeletedAt         time.Time `json:"deleted_at"`
+	ID                         int64          `json:"id"`
+	UserUuid                   uuid.UUID      `json:"user_uuid"`
+	Username                   string         `json:"username"`
+	HashedPassword             string         `json:"hashed_password"`
+	FullName                   string         `json:"full_name"`
+	Email                      string         `json:"email"`
+	PasswordChangedAt          time.Time      `json:"password_changed_at"`
+	Role                       string         `json:"role"`
+	CreatedAt                  time.Time      `json:"created_at"`
+	UpdatedAt                  time.Time      `json:"updated_at"`
+	DeletedAt                  time.Time      `json:"deleted_at"`
+	VerificationEmailCode      sql.NullString `json:"verification_email_code"`
+	VerifiedEmailAt            time.Time      `json:"verified_email_at"`
+	VerificationEmailExpiredAt sql.NullTime   `json:"verification_email_expired_at"`
 }

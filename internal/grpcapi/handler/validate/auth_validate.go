@@ -20,3 +20,17 @@ func ValidateLoginUserRequest(req *pb.LoginUserRequest) (violations []*errdetail
 
 	return violations
 }
+
+func ValidateVerifyEmailUserRequest(req *pb.VerifyEmailRequest) (violations []*errdetails.BadRequest_FieldViolation) {
+	if err := helper.ValidateRequired(req.GetVerificationCode()); err != nil {
+		log.Error().Err(err).Msg("Invalid verification code")
+		violations = append(violations, helper.FieldViolation("verification_code", err))
+	}
+
+	if err := helper.ValidateUUID(req.GetVerificationCode()); err != nil {
+		log.Error().Err(err).Msg("Invalid user id")
+		violations = append(violations, helper.FieldViolation("verficiation_code", err))
+	}
+
+	return violations
+}

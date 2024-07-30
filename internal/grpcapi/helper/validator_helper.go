@@ -43,6 +43,13 @@ func ValidateAlphanum(value string) error {
 	return nil
 }
 
+func ValidatePasswordCustom(value string) error {
+	if matched, _ := regexp.MatchString("^[a-zA-Z0-9!@#$%^&*()_+]+$", value); !matched {
+		return fmt.Errorf("can only contain alphanumeric characters and special characters")
+	}
+	return nil
+}
+
 // validateAlphaSpace checks if the field contains only alphabetic characters with space
 func ValidateAlphaSpace(value string) error {
 	if matched, _ := regexp.MatchString("^[a-zA-Z\\s]+$", value); !matched {

@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"os"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/runner"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 )
@@ -33,13 +36,17 @@ func main() {
 	// Create a database store
 	store := setup.GetDbStore(config, conn)
 
-	setup.InitializeDBMigrations(config)
+	redisClient := setup.RedisConnection(config)
+
+	setup.InitializeDBMigrationsAndSeeder(config, conn)
 
 	// Start the gateway server in a separate goroutine
-	go runGatewayServer(config, store)
+	go runGatewayServer(config, store, redisClient)
+
+	go runner.SendVerificationEmails(context.Background(), redisClient, config)
 
 	// Start the gRPC server
-	rungRPCServer(config, store)
+	rungRPCServer(config, store, redisClient)
 }
 
 // func runGinServer(config util.Config, conn *sql.DB) {
@@ -47,11 +54,11 @@ func main() {
 // }
 
 // rungRPCServer starts the gRPC server using the provided configuration and database store.
-func rungRPCServer(config util.Config, store db.Store) {
-	setup.InitializeAndStartAppGRPCApi(config, store)
+func rungRPCServer(config util.Config, store db.Store, redisClient *redis.Client) {
+	setup.InitializeAndStartAppGRPCApi(config, store, redisClient)
 }
 
 // runGatewayServer starts the gateway server using the provided configuration and database store.
-func runGatewayServer(config util.Config, store db.Store) {
-	setup.InitializeAndStartGatewayServer(config, store)
+func runGatewayServer(config util.Config, store db.Store, redisClient *redis.Client) {
+	setup.InitializeAndStartGatewayServer(config, store, redisClient)
 }
