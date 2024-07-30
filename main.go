@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/redis/go-redis/v9"
@@ -8,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/runner"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 )
@@ -40,6 +42,8 @@ func main() {
 
 	// Start the gateway server in a separate goroutine
 	go runGatewayServer(config, store, redisClient)
+
+	go runner.SendVerificationEmails(context.Background(), redisClient, config)
 
 	// Start the gRPC server
 	rungRPCServer(config, store, redisClient)
