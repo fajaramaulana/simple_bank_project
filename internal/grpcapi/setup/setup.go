@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
@@ -51,6 +53,22 @@ func DbConnection(config util.Config) *sql.DB {
 	return conn
 }
 
+// RedisConnection establishes a connection to Redis using the provided configuration.
+// It returns a pointer to a redis.Client that can be used to interact with Redis.
+func RedisConnection(config util.Config) *redis.Client {
+	redissb, err := strconv.Atoi(config.RedisDB)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot convert Redis DB to integer")
+	}
+
+	client := redis.NewClient(&redis.Options{
+		Addr:     config.RedisHost + ":" + config.RedisPort,
+		Password: "",
+		DB:       redissb,
+	})
+	return client
+}
+
 // GetDbStore returns a new instance of db.Store using the provided configuration and database connection.
 func GetDbStore(config util.Config, conn *sql.DB) db.Store {
 	store := db.NewStore(conn)
@@ -62,12 +80,12 @@ func GetDbStore(config util.Config, conn *sql.DB) db.Store {
 // It creates instances of the required services and controllers,
 // and then creates a gRPC server with the provided store, controllers, and configuration.
 // Finally, it starts the gRPC server on the specified port from the configuration.
-func InitializeAndStartAppGRPCApi(config util.Config, store db.Store) {
+func InitializeAndStartAppGRPCApi(config util.Config, store db.Store, redisClient *redis.Client) {
 
 	authService := service.NewAuthService(store, config)
 	authController := controller.NewAuthController(authService)
 
-	userService := service.NewUserService(store, config)
+	userService := service.NewUserService(store, config, redisClient)
 	userController := controller.NewUserController(userService)
 
 	server, err := server.NewServer(store, authController, userController, config)
@@ -87,12 +105,12 @@ func InitializeAndStartAppGRPCApi(config util.Config, store db.Store) {
 // The function also serves the Swagger UI using the provided statik file system.
 // It listens on the configured port and logs the server startup message.
 // If any error occurs during the initialization or serving, the function logs the error and exits.
-func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
+func InitializeAndStartGatewayServer(config util.Config, store db.Store, redisClient *redis.Client) {
 
 	authService := service.NewAuthService(store, config)
 	authController := controller.NewAuthController(authService)
 
-	userService := service.NewUserService(store, config)
+	userService := service.NewUserService(store, config, redisClient)
 	userController := controller.NewUserController(userService)
 
 	server, err := server.NewServer(store, authController, userController, config)
@@ -143,12 +161,17 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 	log.Info().Msg("gRPC gateway server started")
 }
 
-// InitializeDBMigrations initializes the database migrations using the provided configuration.
-// It creates a new migration instance and performs the necessary database migrations.
-// The function takes a `config` parameter of type `util.Config` which contains the necessary database configuration.
-// It returns no values.
-// If any error occurs during migration creation or migration execution, the function will log a fatal error.
-// If the migration is successful, it will log a message indicating the successful migration.
+// InitializeDBMigrationsAndSeeder initializes the database migrations and seeder.
+// It takes a `config` object of type `util.Config` and a `conn` object of type `*sql.DB`.
+// The `config` object contains the database configuration details such as DBUser, DBPassword, DBHost, DBPort, DBName, and DBSSLMode.
+// The `conn` object is the database connection object.
+// This function performs the following steps:
+// 1. Creates a database migration using the provided configuration details.
+// 2. Applies the migration to the database.
+// 3. Logs any errors that occur during migration.
+// 4. Logs a success message if the migration is successful.
+// 5. Creates a seeder object using the provided database connection.
+// 6. Seeds the database with initial data using the seeder object.
 func InitializeDBMigrationsAndSeeder(config util.Config, conn *sql.DB) {
 	// migration
 	dbConf := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", config.DBUser, config.DBPassword, config.DBHost, config.DBPort, config.DBName, config.DBSSLMode)

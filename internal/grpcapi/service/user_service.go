@@ -10,18 +10,20 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type UserService struct {
-	db     db.Store
-	config util.Config
+	db          db.Store
+	config      util.Config
+	redisClient *redis.Client
 }
 
-func NewUserService(db db.Store, config util.Config) *UserService {
-	return &UserService{db: db, config: config}
+func NewUserService(db db.Store, config util.Config, redisClient *redis.Client) *UserService {
+	return &UserService{db: db, config: config, redisClient: redisClient}
 }
 
 func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserRespose, error) {
