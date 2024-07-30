@@ -109,8 +109,8 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 	})
 
 	grpcMux := runtime.NewServeMux(jsonOpt)
-	ctx, cancle := context.WithCancel(context.Background())
-	defer cancle()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
 	if err != nil {
