@@ -37,6 +37,9 @@ services:
       - ACCESS_TOKEN_DURATION=15m
       - REFRESH_TOKEN_DURATION=24h
       - ENVIROMENT=development
+      - REDIS_PORT=6379
+      - REDIS_HOST=localhost
+      - REDIS_DB=0
     depends_on:
       - postgres
     entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
