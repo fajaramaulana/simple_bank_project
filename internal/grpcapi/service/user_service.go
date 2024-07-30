@@ -83,7 +83,10 @@ func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 			String: verificationCode,
 			Valid:  true,
 		},
-		VerificationEmailExpiredAt: time.Now().Add(time.Minute * 15),
+		VerificationEmailExpiredAt: sql.NullTime{
+			Time:  time.Now().Add(time.Minute * 15),
+			Valid: true,
+		},
 	}
 
 	result, err := s.db.UpdateUserVerificationEmail(ctx, argVerCode)
