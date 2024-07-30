@@ -33,7 +33,7 @@ func main() {
 	// Create a database store
 	store := setup.GetDbStore(config, conn)
 
-	setup.InitializeDBMigrations(config)
+	setup.InitializeDBMigrationsAndSeeder(config, conn)
 
 	// Start the gateway server in a separate goroutine
 	go runGatewayServer(config, store)

@@ -12,6 +12,7 @@ import (
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/controller"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/logger"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/seed"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/server"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/service"
 	"github.com/fajaramaulana/simple_bank_project/pb"
@@ -148,7 +149,8 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 // It returns no values.
 // If any error occurs during migration creation or migration execution, the function will log a fatal error.
 // If the migration is successful, it will log a message indicating the successful migration.
-func InitializeDBMigrations(config util.Config) {
+func InitializeDBMigrationsAndSeeder(config util.Config, conn *sql.DB) {
+	// migration
 	dbConf := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", config.DBUser, config.DBPassword, config.DBHost, config.DBPort, config.DBName, config.DBSSLMode)
 	m, err := migrate.New(config.DBSource, dbConf)
 	if err != nil {
@@ -161,4 +163,7 @@ func InitializeDBMigrations(config util.Config) {
 	if err != migrate.ErrNoChange {
 		log.Info().Msg("Database migration successful")
 	}
+
+	seed := seed.NewSeeder(conn)
+	seed.Seed()
 }
