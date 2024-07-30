@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/fajaramaulana/simple_bank_project/pb";
+
+message VerifyEmailRequest {
+    string verification_code = 1;
+}
+
+message VerifyEmailResponse {
+    string message = 1;
+}
