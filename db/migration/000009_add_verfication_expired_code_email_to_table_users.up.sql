@@ -1,0 +1,2 @@
+ALTER TABLE users
+ADD COLUMN verification_email_expired_at TIMESTAMPTZ;
