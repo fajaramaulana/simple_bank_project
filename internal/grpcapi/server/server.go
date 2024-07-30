@@ -47,7 +47,7 @@ func (s *Server) Start(port string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to listen")
 	}
-	log.Printf("Starting gRPC server on %s", port)
+	log.Info().Msgf("Start gRPC server at port: %s", port)
 
 	grpcLogger := grpc.UnaryInterceptor(logger.GrpcLogger)
 	grpcServer := grpc.NewServer(grpcLogger)

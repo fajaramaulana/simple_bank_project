@@ -11,6 +11,7 @@ import (
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/controller"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/logger"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/server"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/service"
 	"github.com/fajaramaulana/simple_bank_project/pb"
@@ -133,8 +134,8 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store) {
 	}
 
 	log.Printf("Starting gRPC gateway server on %s", config.PortGatewayGrpc)
-
-	err = http.Serve(listener, mux)
+	handler := logger.HttpLogger(mux)
+	err = http.Serve(listener, handler)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot start gRPC gateway server")
 	}

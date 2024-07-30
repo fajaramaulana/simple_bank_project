@@ -11,12 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func GrpcLogger(
-	ctx context.Context,
-	req interface{},
-	info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler,
-) (resp interface{}, err error) {
+func GrpcLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 	startTime := time.Now()
 	result, err := handler(ctx, req)
 	duration := time.Since(startTime)
