@@ -72,5 +72,5 @@ type User struct {
 	DeletedAt                  time.Time      `json:"deleted_at"`
 	VerificationEmailCode      sql.NullString `json:"verification_email_code"`
 	VerifiedEmailAt            time.Time      `json:"verified_email_at"`
-	VerificationEmailExpiredAt time.Time      `json:"verification_email_expired_at"`
+	VerificationEmailExpiredAt sql.NullTime   `json:"verification_email_expired_at"`
 }

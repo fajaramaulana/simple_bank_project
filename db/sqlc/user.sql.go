@@ -208,19 +208,25 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (GetUs
 }
 
 const getUserByVerificationEmailCode = `-- name: GetUserByVerificationEmailCode :one
-SELECT user_uuid, verification_email_code, verification_email_expired_at FROM users WHERE  verification_email_code = $1 AND verified_email_at = '0001-01-01 07:00:00.000 +0700' LIMIT 1
+SELECT user_uuid, verification_email_code, verification_email_expired_at, verified_email_at FROM users WHERE  verification_email_code = $1 LIMIT 1
 `
 
 type GetUserByVerificationEmailCodeRow struct {
 	UserUuid                   uuid.UUID      `json:"user_uuid"`
 	VerificationEmailCode      sql.NullString `json:"verification_email_code"`
-	VerificationEmailExpiredAt time.Time      `json:"verification_email_expired_at"`
+	VerificationEmailExpiredAt sql.NullTime   `json:"verification_email_expired_at"`
+	VerifiedEmailAt            time.Time      `json:"verified_email_at"`
 }
 
 func (q *Queries) GetUserByVerificationEmailCode(ctx context.Context, verificationEmailCode sql.NullString) (GetUserByVerificationEmailCodeRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserByVerificationEmailCode, verificationEmailCode)
 	var i GetUserByVerificationEmailCodeRow
-	err := row.Scan(&i.UserUuid, &i.VerificationEmailCode, &i.VerificationEmailExpiredAt)
+	err := row.Scan(
+		&i.UserUuid,
+		&i.VerificationEmailCode,
+		&i.VerificationEmailExpiredAt,
+		&i.VerifiedEmailAt,
+	)
 	return i, err
 }
 
@@ -312,24 +318,30 @@ func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPassword
 
 const updateUserVerificationEmail = `-- name: UpdateUserVerificationEmail :one
 UPDATE users
-SET verification_email_code = $1, verification_email_expired_at = $2 
-WHERE user_uuid = $3 RETURNING user_uuid, verification_email_code, verification_email_expired_at
+SET verification_email_code = $1, verification_email_expired_at = $2, verified_email_at = $3
+WHERE user_uuid = $4 RETURNING user_uuid, verification_email_code, verification_email_expired_at
 `
 
 type UpdateUserVerificationEmailParams struct {
 	VerificationEmailCode      sql.NullString `json:"verification_email_code"`
-	VerificationEmailExpiredAt time.Time      `json:"verification_email_expired_at"`
+	VerificationEmailExpiredAt sql.NullTime   `json:"verification_email_expired_at"`
+	VerifiedEmailAt            time.Time      `json:"verified_email_at"`
 	UserUuid                   uuid.UUID      `json:"user_uuid"`
 }
 
 type UpdateUserVerificationEmailRow struct {
 	UserUuid                   uuid.UUID      `json:"user_uuid"`
 	VerificationEmailCode      sql.NullString `json:"verification_email_code"`
-	VerificationEmailExpiredAt time.Time      `json:"verification_email_expired_at"`
+	VerificationEmailExpiredAt sql.NullTime   `json:"verification_email_expired_at"`
 }
 
 func (q *Queries) UpdateUserVerificationEmail(ctx context.Context, arg UpdateUserVerificationEmailParams) (UpdateUserVerificationEmailRow, error) {
-	row := q.db.QueryRowContext(ctx, updateUserVerificationEmail, arg.VerificationEmailCode, arg.VerificationEmailExpiredAt, arg.UserUuid)
+	row := q.db.QueryRowContext(ctx, updateUserVerificationEmail,
+		arg.VerificationEmailCode,
+		arg.VerificationEmailExpiredAt,
+		arg.VerifiedEmailAt,
+		arg.UserUuid,
+	)
 	var i UpdateUserVerificationEmailRow
 	err := row.Scan(&i.UserUuid, &i.VerificationEmailCode, &i.VerificationEmailExpiredAt)
 	return i, err
