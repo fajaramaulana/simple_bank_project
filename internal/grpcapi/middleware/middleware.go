@@ -47,10 +47,11 @@ func AuthMiddleware(ctx context.Context, tokenMaker token.Maker) (*token.Payload
 	return nil, nil
 }
 
-func CheckRole(payload *token.Payload, role string) error {
-	if payload.Role != role {
-		return fmt.Errorf("access denied: role is not %s", role)
+func CheckRole(payload *token.Payload, role []string) error {
+	for _, r := range role {
+		if payload.Role == r {
+			return nil
+		}
 	}
-
-	return nil
+	return fmt.Errorf("role is not allowed")
 }
