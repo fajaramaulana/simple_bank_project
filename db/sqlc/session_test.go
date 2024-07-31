@@ -22,7 +22,7 @@ func generateSession(t *testing.T) Session {
 		Email:          util.RandomEmail(),
 	}
 
-	user, err := testQueries.CreateUser(context.Background(), inputUser)
+	user, err := testStore.CreateUser(context.Background(), inputUser)
 	require.NoError(t, err)
 
 	uuid := uuid.New()
@@ -49,7 +49,7 @@ func generateSession(t *testing.T) Session {
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	}
 
-	session, err := testQueries.CreateSession(context.Background(), input)
+	session, err := testStore.CreateSession(context.Background(), input)
 	require.NoError(t, err)
 	require.NotEmpty(t, session)
 	require.Equal(t, input.ID, session.ID, "input and return id should be same")
@@ -73,7 +73,7 @@ func TestGetSession(t *testing.T) {
 
 	require.NotEmpty(t, session)
 
-	getFromSession, err := testQueries.GetSession(context.Background(), session.ID)
+	getFromSession, err := testStore.GetSession(context.Background(), session.ID)
 	require.NoError(t, err)
 	require.NotEmpty(t, getFromSession)
 	require.Equal(t, session.ID, getFromSession.ID, "create and get should be")

@@ -2,11 +2,14 @@ package db
 
 import (
 	"context"
-	"database/sql"
+	"math/big"
 	"testing"
 	"time"
 
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/helper"
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,8 +23,7 @@ func generateAccount(t *testing.T) CreateAccountRow {
 		Email:          util.RandomEmail(),
 	}
 
-	user, err := testQueries.CreateUser(context.Background(), inputUser)
-
+	user, err := testStore.CreateUser(context.Background(), inputUser)
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 	require.Equal(t, inputUser.Username, user.Username, "input and return username should be same")
@@ -32,17 +34,20 @@ func generateAccount(t *testing.T) CreateAccountRow {
 	r := util.NewRandomMoneyGenerator()
 	input := CreateAccountParams{
 		Owner:    user.FullName,
-		Balance:  util.RandomMoney(r, 10.00, 99999999.00),
+		Balance:  pgtype.Numeric{Int: big.NewInt(util.RandomMoneyInt(r, 10, 99999999)), Exp: 0, Valid: true},
 		Currency: util.RandomCurrency(),
 		UserUuid: user.UserUuid,
 	}
 
-	account, err := testQueries.CreateAccount(context.Background(), input)
-
+	account, err := testStore.CreateAccount(context.Background(), input)
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
+	inputBalanceBigInt := helper.NumericToBigInt(input.Balance)
+	accountBalanceBigInt := helper.NumericToBigInt(account.Balance)
+
+	// Compare the balances
 	require.Equal(t, input.Owner, account.Owner, "input and return owner should be same")
-	require.Equal(t, input.Balance, account.Balance, "input and return balance should be same")
+	require.Equal(t, inputBalanceBigInt.String(), accountBalanceBigInt.String(), "input and return balance should be same")
 	require.Equal(t, input.Currency, account.Currency, "input and return currency should be same")
 	require.NotEmpty(t, account.AccountUuid.String())
 	require.NotNil(t, account.CreatedAt)
@@ -50,6 +55,7 @@ func generateAccount(t *testing.T) CreateAccountRow {
 
 	return account
 }
+
 func TestCreateAccount(t *testing.T) {
 	generateAccount(t)
 }
@@ -57,7 +63,7 @@ func TestCreateAccount(t *testing.T) {
 func TestGetAccount(t *testing.T) {
 	createRandAccount := generateAccount(t)
 
-	getFromAccount, err := testQueries.GetAccount(context.Background(), createRandAccount.ID)
+	getFromAccount, err := testStore.GetAccount(context.Background(), createRandAccount.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, getFromAccount)
@@ -76,7 +82,7 @@ func TestUpdateAccount(t *testing.T) {
 		Balance: createRandAccount.Balance,
 	}
 
-	updatedData, err := testQueries.UpdateAccount(context.Background(), params)
+	updatedData, err := testStore.UpdateAccount(context.Background(), params)
 	require.NoError(t, err)
 
 	require.NotEmpty(t, updatedData)
@@ -88,11 +94,11 @@ func TestUpdateAccount(t *testing.T) {
 func TestSoftDeleteAccount(t *testing.T) {
 	createRandAccount := generateAccount(t)
 
-	err := testQueries.SoftDeleteAccount(context.Background(), createRandAccount.ID)
+	err := testStore.SoftDeleteAccount(context.Background(), createRandAccount.ID)
 	require.NoError(t, err)
-	getAccount, err := testQueries.GetAccount(context.Background(), createRandAccount.ID)
+	getAccount, err := testStore.GetAccount(context.Background(), createRandAccount.ID)
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, pgx.ErrNoRows.Error())
 	require.Empty(t, getAccount)
 
 }
@@ -107,7 +113,7 @@ func TestListAccounts(t *testing.T) {
 		Offset: 0,
 	}
 
-	accounts, err := testQueries.ListAccounts(context.Background(), arg)
+	accounts, err := testStore.ListAccounts(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, accounts)
 
@@ -127,7 +133,7 @@ func TestListAccountsNil(t *testing.T) {
 		Offset: 444,
 	}
 
-	accounts, err := testQueries.ListAccounts(context.Background(), arg)
+	accounts, err := testStore.ListAccounts(context.Background(), arg)
 	require.NoError(t, err)
 	require.Empty(t, accounts)
 
@@ -140,7 +146,7 @@ func TestListAccountsNil(t *testing.T) {
 func TestGetAccountForUpdate(t *testing.T) {
 	createRandAccount := generateAccount(t)
 
-	getFromAccount, err := testQueries.GetAccountForUpdate(context.Background(), createRandAccount.ID)
+	getFromAccount, err := testStore.GetAccountForUpdate(context.Background(), createRandAccount.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, getFromAccount)
@@ -158,14 +164,14 @@ func TestListAccountsError(t *testing.T) {
 		Offset: 0,
 	}
 
-	_, err := testQueries.ListAccounts(context.Background(), arg)
+	_, err := testStore.ListAccounts(context.Background(), arg)
 	require.Error(t, err)
 }
 
 func TestGetAccountByUUID(t *testing.T) {
 	createRandAccount := generateAccount(t)
 
-	getFromAccount, err := testQueries.GetAccountByUUID(context.Background(), createRandAccount.AccountUuid)
+	getFromAccount, err := testStore.GetAccountByUUID(context.Background(), createRandAccount.AccountUuid)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, getFromAccount)

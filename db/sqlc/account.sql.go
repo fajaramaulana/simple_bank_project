@@ -7,10 +7,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addAccountBalance = `-- name: AddAccountBalance :one
@@ -21,25 +21,25 @@ RETURNING id, owner, currency, balance, user_uuid, created_at, account_uuid, upd
 `
 
 type AddAccountBalanceParams struct {
-	Amount string `json:"amount"`
-	ID     int64  `json:"id"`
+	Amount pgtype.Numeric `json:"amount"`
+	ID     int64          `json:"id"`
 }
 
 type AddAccountBalanceRow struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	UserUuid    uuid.UUID    `json:"user_uuid"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
-	Status      int16        `json:"status"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
 }
 
 func (q *Queries) AddAccountBalance(ctx context.Context, arg AddAccountBalanceParams) (AddAccountBalanceRow, error) {
-	row := q.db.QueryRowContext(ctx, addAccountBalance, arg.Amount, arg.ID)
+	row := q.db.QueryRow(ctx, addAccountBalance, arg.Amount, arg.ID)
 	var i AddAccountBalanceRow
 	err := row.Scan(
 		&i.ID,
@@ -62,7 +62,7 @@ WHERE deleted_at IS NULL
 `
 
 func (q *Queries) CountAccounts(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countAccounts)
+	row := q.db.QueryRow(ctx, countAccounts)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -74,7 +74,7 @@ WHERE deleted_at IS NULL AND user_uuid = $1
 `
 
 func (q *Queries) CountAccountsByUserUUID(ctx context.Context, userUuid uuid.UUID) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countAccountsByUserUUID, userUuid)
+	row := q.db.QueryRow(ctx, countAccountsByUserUUID, userUuid)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -93,25 +93,25 @@ INSERT INTO accounts (
 `
 
 type CreateAccountParams struct {
-	Owner    string    `json:"owner"`
-	Balance  string    `json:"balance"`
-	UserUuid uuid.UUID `json:"user_uuid"`
-	Currency string    `json:"currency"`
+	Owner    string         `json:"owner"`
+	Balance  pgtype.Numeric `json:"balance"`
+	UserUuid uuid.UUID      `json:"user_uuid"`
+	Currency string         `json:"currency"`
 }
 
 type CreateAccountRow struct {
-	ID          int64     `json:"id"`
-	Owner       string    `json:"owner"`
-	Currency    string    `json:"currency"`
-	Balance     string    `json:"balance"`
-	UserUuid    uuid.UUID `json:"user_uuid"`
-	AccountUuid uuid.UUID `json:"account_uuid"`
-	Status      int16     `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int64          `json:"id"`
+	Owner       string         `json:"owner"`
+	Currency    string         `json:"currency"`
+	Balance     pgtype.Numeric `json:"balance"`
+	UserUuid    uuid.UUID      `json:"user_uuid"`
+	AccountUuid uuid.UUID      `json:"account_uuid"`
+	Status      int16          `json:"status"`
+	CreatedAt   time.Time      `json:"created_at"`
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error) {
-	row := q.db.QueryRowContext(ctx, createAccount,
+	row := q.db.QueryRow(ctx, createAccount,
 		arg.Owner,
 		arg.Balance,
 		arg.UserUuid,
@@ -137,20 +137,20 @@ WHERE deleted_at IS NULL AND id = $1 LIMIT 1
 `
 
 type GetAccountRow struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	UserUuid    uuid.UUID    `json:"user_uuid"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
-	Status      int16        `json:"status"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
 }
 
 func (q *Queries) GetAccount(ctx context.Context, id int64) (GetAccountRow, error) {
-	row := q.db.QueryRowContext(ctx, getAccount, id)
+	row := q.db.QueryRow(ctx, getAccount, id)
 	var i GetAccountRow
 	err := row.Scan(
 		&i.ID,
@@ -173,20 +173,20 @@ WHERE deleted_at IS NULL AND account_uuid = $1 LIMIT 1
 `
 
 type GetAccountByUUIDRow struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	UserUuid    uuid.UUID    `json:"user_uuid"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
-	Status      int16        `json:"status"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
 }
 
 func (q *Queries) GetAccountByUUID(ctx context.Context, accountUuid uuid.UUID) (GetAccountByUUIDRow, error) {
-	row := q.db.QueryRowContext(ctx, getAccountByUUID, accountUuid)
+	row := q.db.QueryRow(ctx, getAccountByUUID, accountUuid)
 	var i GetAccountByUUIDRow
 	err := row.Scan(
 		&i.ID,
@@ -209,20 +209,20 @@ WHERE deleted_at IS NULL AND user_uuid = $1 LIMIT 1
 `
 
 type GetAccountByUserUUIDRow struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	UserUuid    uuid.UUID    `json:"user_uuid"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
-	Status      int16        `json:"status"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
 }
 
 func (q *Queries) GetAccountByUserUUID(ctx context.Context, userUuid uuid.UUID) (GetAccountByUserUUIDRow, error) {
-	row := q.db.QueryRowContext(ctx, getAccountByUserUUID, userUuid)
+	row := q.db.QueryRow(ctx, getAccountByUserUUID, userUuid)
 	var i GetAccountByUserUUIDRow
 	err := row.Scan(
 		&i.ID,
@@ -250,20 +250,20 @@ type GetAccountByUserUUIDAndCurrencyParams struct {
 }
 
 type GetAccountByUserUUIDAndCurrencyRow struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	UserUuid    uuid.UUID    `json:"user_uuid"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
-	Status      int16        `json:"status"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
 }
 
 func (q *Queries) GetAccountByUserUUIDAndCurrency(ctx context.Context, arg GetAccountByUserUUIDAndCurrencyParams) (GetAccountByUserUUIDAndCurrencyRow, error) {
-	row := q.db.QueryRowContext(ctx, getAccountByUserUUIDAndCurrency, arg.UserUuid, arg.Currency)
+	row := q.db.QueryRow(ctx, getAccountByUserUUIDAndCurrency, arg.UserUuid, arg.Currency)
 	var i GetAccountByUserUUIDAndCurrencyRow
 	err := row.Scan(
 		&i.ID,
@@ -286,20 +286,20 @@ WHERE deleted_at IS NULL AND user_uuid = $1
 `
 
 type GetAccountByUserUUIDManyRow struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	UserUuid    uuid.UUID    `json:"user_uuid"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
-	Status      int16        `json:"status"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
 }
 
 func (q *Queries) GetAccountByUserUUIDMany(ctx context.Context, userUuid uuid.UUID) ([]GetAccountByUserUUIDManyRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAccountByUserUUIDMany, userUuid)
+	rows, err := q.db.Query(ctx, getAccountByUserUUIDMany, userUuid)
 	if err != nil {
 		return nil, err
 	}
@@ -323,9 +323,6 @@ func (q *Queries) GetAccountByUserUUIDMany(ctx context.Context, userUuid uuid.UU
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -339,20 +336,20 @@ FOR NO KEY UPDATE
 `
 
 type GetAccountForUpdateRow struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	UserUuid    uuid.UUID    `json:"user_uuid"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
-	Status      int16        `json:"status"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
 }
 
 func (q *Queries) GetAccountForUpdate(ctx context.Context, id int64) (GetAccountForUpdateRow, error) {
-	row := q.db.QueryRowContext(ctx, getAccountForUpdate, id)
+	row := q.db.QueryRow(ctx, getAccountForUpdate, id)
 	var i GetAccountForUpdateRow
 	err := row.Scan(
 		&i.ID,
@@ -384,23 +381,23 @@ type ListAccountsParams struct {
 }
 
 type ListAccountsRow struct {
-	ID          int64          `json:"id"`
-	Owner       string         `json:"owner"`
-	Currency    string         `json:"currency"`
-	Balance     string         `json:"balance"`
-	UserUuid    uuid.UUID      `json:"user_uuid"`
-	CreatedAt   time.Time      `json:"created_at"`
-	AccountUuid uuid.UUID      `json:"account_uuid"`
-	UpdatedAt   sql.NullTime   `json:"updated_at"`
-	DeletedAt   sql.NullTime   `json:"deleted_at"`
-	Status      int16          `json:"status"`
-	Email       sql.NullString `json:"email"`
-	FullName    sql.NullString `json:"full_name"`
-	Username    sql.NullString `json:"username"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
+	Email       pgtype.Text        `json:"email"`
+	FullName    pgtype.Text        `json:"full_name"`
+	Username    pgtype.Text        `json:"username"`
 }
 
 func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listAccounts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -427,9 +424,6 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]L
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -452,23 +446,23 @@ type ListAccountsByUserUUIDParams struct {
 }
 
 type ListAccountsByUserUUIDRow struct {
-	ID          int64          `json:"id"`
-	Owner       string         `json:"owner"`
-	Currency    string         `json:"currency"`
-	Balance     string         `json:"balance"`
-	UserUuid    uuid.UUID      `json:"user_uuid"`
-	CreatedAt   time.Time      `json:"created_at"`
-	AccountUuid uuid.UUID      `json:"account_uuid"`
-	UpdatedAt   sql.NullTime   `json:"updated_at"`
-	DeletedAt   sql.NullTime   `json:"deleted_at"`
-	Status      int16          `json:"status"`
-	Email       sql.NullString `json:"email"`
-	FullName    sql.NullString `json:"full_name"`
-	Username    sql.NullString `json:"username"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
+	Email       pgtype.Text        `json:"email"`
+	FullName    pgtype.Text        `json:"full_name"`
+	Username    pgtype.Text        `json:"username"`
 }
 
 func (q *Queries) ListAccountsByUserUUID(ctx context.Context, arg ListAccountsByUserUUIDParams) ([]ListAccountsByUserUUIDRow, error) {
-	rows, err := q.db.QueryContext(ctx, listAccountsByUserUUID, arg.UserUuid, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listAccountsByUserUUID, arg.UserUuid, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -495,9 +489,6 @@ func (q *Queries) ListAccountsByUserUUID(ctx context.Context, arg ListAccountsBy
 		}
 		items = append(items, i)
 	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -512,7 +503,7 @@ RETURNING id, owner, currency, balance, user_uuid, created_at, account_uuid, upd
 `
 
 func (q *Queries) SoftDeleteAccount(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, softDeleteAccount, id)
+	_, err := q.db.Exec(ctx, softDeleteAccount, id)
 	return err
 }
 
@@ -524,25 +515,25 @@ RETURNING id, owner, currency, balance, user_uuid, created_at, account_uuid, upd
 `
 
 type SubtractAccountBalanceParams struct {
-	Amount string `json:"amount"`
-	ID     int64  `json:"id"`
+	Amount pgtype.Numeric `json:"amount"`
+	ID     int64          `json:"id"`
 }
 
 type SubtractAccountBalanceRow struct {
-	ID          int64        `json:"id"`
-	Owner       string       `json:"owner"`
-	Currency    string       `json:"currency"`
-	Balance     string       `json:"balance"`
-	UserUuid    uuid.UUID    `json:"user_uuid"`
-	CreatedAt   time.Time    `json:"created_at"`
-	AccountUuid uuid.UUID    `json:"account_uuid"`
-	UpdatedAt   sql.NullTime `json:"updated_at"`
-	DeletedAt   sql.NullTime `json:"deleted_at"`
-	Status      int16        `json:"status"`
+	ID          int64              `json:"id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
 }
 
 func (q *Queries) SubtractAccountBalance(ctx context.Context, arg SubtractAccountBalanceParams) (SubtractAccountBalanceRow, error) {
-	row := q.db.QueryRowContext(ctx, subtractAccountBalance, arg.Amount, arg.ID)
+	row := q.db.QueryRow(ctx, subtractAccountBalance, arg.Amount, arg.ID)
 	var i SubtractAccountBalanceRow
 	err := row.Scan(
 		&i.ID,
@@ -587,28 +578,28 @@ LEFT JOIN
 `
 
 type UpdateAccountParams struct {
-	ID      int64  `json:"id"`
-	Balance string `json:"balance"`
+	ID      int64          `json:"id"`
+	Balance pgtype.Numeric `json:"balance"`
 }
 
 type UpdateAccountRow struct {
-	AccountID   int64          `json:"account_id"`
-	Owner       string         `json:"owner"`
-	Currency    string         `json:"currency"`
-	Balance     string         `json:"balance"`
-	UserUuid    uuid.UUID      `json:"user_uuid"`
-	CreatedAt   time.Time      `json:"created_at"`
-	AccountUuid uuid.UUID      `json:"account_uuid"`
-	UpdatedAt   sql.NullTime   `json:"updated_at"`
-	DeletedAt   sql.NullTime   `json:"deleted_at"`
-	Status      int16          `json:"status"`
-	FullName    sql.NullString `json:"full_name"`
-	Username    sql.NullString `json:"username"`
-	Email       sql.NullString `json:"email"`
+	AccountID   int64              `json:"account_id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
+	FullName    pgtype.Text        `json:"full_name"`
+	Username    pgtype.Text        `json:"username"`
+	Email       pgtype.Text        `json:"email"`
 }
 
 func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UpdateAccountRow, error) {
-	row := q.db.QueryRowContext(ctx, updateAccount, arg.ID, arg.Balance)
+	row := q.db.QueryRow(ctx, updateAccount, arg.ID, arg.Balance)
 	var i UpdateAccountRow
 	err := row.Scan(
 		&i.AccountID,
@@ -663,23 +654,23 @@ type UpdateProfileAccountParams struct {
 }
 
 type UpdateProfileAccountRow struct {
-	AccountID   int64          `json:"account_id"`
-	Owner       string         `json:"owner"`
-	Currency    string         `json:"currency"`
-	Balance     string         `json:"balance"`
-	UserUuid    uuid.UUID      `json:"user_uuid"`
-	CreatedAt   time.Time      `json:"created_at"`
-	AccountUuid uuid.UUID      `json:"account_uuid"`
-	UpdatedAt   sql.NullTime   `json:"updated_at"`
-	DeletedAt   sql.NullTime   `json:"deleted_at"`
-	Status      int16          `json:"status"`
-	FullName    sql.NullString `json:"full_name"`
-	Username    sql.NullString `json:"username"`
-	Email       sql.NullString `json:"email"`
+	AccountID   int64              `json:"account_id"`
+	Owner       string             `json:"owner"`
+	Currency    string             `json:"currency"`
+	Balance     pgtype.Numeric     `json:"balance"`
+	UserUuid    uuid.UUID          `json:"user_uuid"`
+	CreatedAt   time.Time          `json:"created_at"`
+	AccountUuid uuid.UUID          `json:"account_uuid"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Status      int16              `json:"status"`
+	FullName    pgtype.Text        `json:"full_name"`
+	Username    pgtype.Text        `json:"username"`
+	Email       pgtype.Text        `json:"email"`
 }
 
 func (q *Queries) UpdateProfileAccount(ctx context.Context, arg UpdateProfileAccountParams) (UpdateProfileAccountRow, error) {
-	row := q.db.QueryRowContext(ctx, updateProfileAccount,
+	row := q.db.QueryRow(ctx, updateProfileAccount,
 		arg.AccountUuid,
 		arg.Owner,
 		arg.Currency,

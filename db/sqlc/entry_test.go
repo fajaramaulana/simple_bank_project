@@ -17,7 +17,7 @@ func generateEntryRandom(t *testing.T, account CreateAccountRow) Entry {
 		TypeTrans: "debit",
 	}
 
-	entry, err := testQueries.CreateEntry(context.Background(), input)
+	entry, err := testStore.CreateEntry(context.Background(), input)
 	if err != nil {
 		fmt.Printf("%# v\n", err)
 	}
@@ -42,7 +42,7 @@ func TestGetEntry(t *testing.T) {
 	account := generateAccount(t)
 	createRandEntry := generateEntryRandom(t, account)
 
-	getFromEntry, err := testQueries.GetEntry(context.Background(), createRandEntry.ID)
+	getFromEntry, err := testStore.GetEntry(context.Background(), createRandEntry.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, getFromEntry)
@@ -64,7 +64,7 @@ func TestListEntry(t *testing.T) {
 		Offset:    5,
 	}
 
-	entries, err := testQueries.ListEntries(context.Background(), arg)
+	entries, err := testStore.ListEntries(context.Background(), arg)
 	// fmt.Printf("%# v\n", entries)
 	require.NoError(t, err)
 	require.NotEmpty(t, entries)

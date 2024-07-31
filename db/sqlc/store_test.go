@@ -3,10 +3,12 @@ package db
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"math/rand"
 	"strconv"
 	"testing"
 
+	helpergrpc "github.com/fajaramaulana/simple_bank_project/internal/grpcapi/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/util"
@@ -14,8 +16,6 @@ import (
 )
 
 func TestTransTx(t *testing.T) {
-	store := NewStore(testDB)
-
 	account1 := generateAccount(t)
 	account2 := generateAccount(t)
 
@@ -32,7 +32,7 @@ func TestTransTx(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		go func() {
-			result, err := store.TransferTx(context.Background(), TransferTxParam{
+			result, err := testStore.TransferTx(context.Background(), TransferTxParam{
 				FromAccountID: account1.ID,
 				ToAccountID:   account2.ID,
 				Amount:        amount,
@@ -56,7 +56,10 @@ func TestTransTx(t *testing.T) {
 		transaction := result.Transaction
 		// fmt.Printf("%# v\n", pretty.Formatter(transaction))
 
-		convertAmontFloat64, err := strconv.ParseFloat(transaction.Amount, 64)
+		getData, err := transaction.Amount.Float64Value()
+		require.NoError(t, err)
+		convertAmount := helpergrpc.NumerictoFloat64(transaction.Amount)
+		fmt.Printf("%# v\n", getData)
 
 		require.NoError(t, err)
 
@@ -64,39 +67,38 @@ func TestTransTx(t *testing.T) {
 		require.NotEmpty(t, result)
 		require.Equal(t, account1.ID, transaction.FromAccountID)
 		require.Equal(t, account2.ID, transaction.ToAccountID)
-		require.Equal(t, float64(amount), convertAmontFloat64)
+		require.Equal(t, float64(amount), convertAmount)
 		require.NotZero(t, transaction.ID)
 		require.NotZero(t, transaction.CreatedAt)
 		require.NotZero(t, transaction.ToAccountID)
 
-		_, err = store.GetTransaction(context.Background(), transaction.ID)
+		_, err = testStore.GetTransaction(context.Background(), transaction.ID)
 		require.NoError(t, err)
 
 		// check entries
-		convertAmountFromEntryFloat64, err := strconv.ParseFloat(result.FromEntry.Amount, 64)
+		convertAmountFromEntry := helpergrpc.NumerictoFloat64(result.FromEntry.Amount)
 		require.NoError(t, err)
 		fromEntry := result.FromEntry
 		require.NotEmpty(t, fromEntry)
 		require.Equal(t, account1.ID, fromEntry.AccountID)
-		require.Equal(t, float64(amount), convertAmountFromEntryFloat64)
+		require.Equal(t, float64(amount), convertAmountFromEntry)
 		require.Equal(t, "debit", fromEntry.TypeTrans)
 		require.NotZero(t, fromEntry.ID)
 		require.NotZero(t, fromEntry.CreatedAt)
 
-		_, err = store.GetEntry(context.Background(), fromEntry.ID)
+		_, err = testStore.GetEntry(context.Background(), fromEntry.ID)
 		require.NoError(t, err)
-
-		convertAmountToEntryFloat64, err := strconv.ParseFloat(result.ToEntry.Amount, 64)
+		convertAmountToEntry := helpergrpc.NumerictoFloat64(result.ToEntry.Amount)
 
 		require.NoError(t, err)
 		toEntry := result.ToEntry
 		require.NotEmpty(t, toEntry)
 		require.Equal(t, account2.ID, toEntry.AccountID)
-		require.Equal(t, float64(amount), convertAmountToEntryFloat64)
+		require.Equal(t, float64(amount), convertAmountToEntry)
 		require.NotZero(t, toEntry.ID)
 		require.NotZero(t, toEntry.CreatedAt)
 
-		_, err = store.GetEntry(context.Background(), toEntry.ID)
+		_, err = testStore.GetEntry(context.Background(), toEntry.ID)
 		require.NoError(t, err)
 
 		// check accounts
@@ -109,59 +111,51 @@ func TestTransTx(t *testing.T) {
 		require.Equal(t, account2.ID, toAccount.ID)
 
 		// check account balance
-		account1Balance, err := strconv.ParseFloat(account1.Balance, 64)
-		require.NoError(t, err)
-		fromAccountBalance, err := strconv.ParseFloat(fromAccount.Balance, 64)
-		require.NoError(t, err)
-		toAccountBalance, err := strconv.ParseFloat(toAccount.Balance, 64)
-		require.NoError(t, err)
-
-		account2Balance, err := strconv.ParseFloat(account2.Balance, 64)
-		require.NoError(t, err)
+		account1Balance := helpergrpc.NumericToBigInt(account1.Balance)
+		fromAccountBalance := helpergrpc.NumericToBigInt(fromAccount.Balance)
+		toAccountBalance := helpergrpc.NumericToBigInt(toAccount.Balance)
+		account2Balance := helpergrpc.NumericToBigInt(account2.Balance)
 		// check balances
 		fmt.Println(">> tx:", fromAccount.Balance, toAccount.Balance)
-		diff1 := account1Balance - fromAccountBalance
-		diff2 := toAccountBalance - account2Balance
+		diff1 := new(big.Int).Sub(account1Balance, fromAccountBalance)
+		diff2 := new(big.Int).Sub(toAccountBalance, account2Balance)
 		fmt.Printf("%# v\n", diff1)
 		fmt.Printf("%# v\n", diff2)
 
 		require.Equal(t, diff1, diff2)
-		require.True(t, diff1 > 0)
-		require.True(t, int64(diff1)%amount == 0) // 1 * amount, 2 * amount, 3 * amount, ..., n * amount
+		require.True(t, diff1.Cmp(big.NewInt(0)) > 0)
+		require.True(t, diff1.Int64()%amount == 0) // 1 * amount, 2 * amount, 3 * amount, ..., n * amount
 
-		k := int(int64(diff1) / amount)
+		k := int(diff1.Int64() / amount)
 		require.True(t, k >= 1 && k <= n)
 		require.NotContains(t, existed, k)
 		existed[k] = true
 	}
 
 	// check the final updated balance
-	updatedAccount1, err := store.GetAccount(context.Background(), account1.ID)
+	updatedAccount1, err := testStore.GetAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
 
-	updatedAccount2, err := store.GetAccount(context.Background(), account2.ID)
+	updatedAccount2, err := testStore.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
 
 	fmt.Println(">> after:", updatedAccount1.Balance, updatedAccount2.Balance)
-	accountOneBalance, err := strconv.ParseFloat(account1.Balance, 64)
+	accountOneBalance, err := strconv.ParseFloat(account1.Balance.Int.String(), 64)
 	require.NoError(t, err)
-	accountTwoBalance, err := strconv.ParseFloat(account2.Balance, 64)
+	accountTwoBalance, err := strconv.ParseFloat(account2.Balance.Int.String(), 64)
 	require.NoError(t, err)
 
 	// convert updatedAccount1.Balance string to float64
-	updatedAccount1Balance, err := strconv.ParseFloat(updatedAccount1.Balance, 64)
-	require.NoError(t, err)
+	updatedAccount1Balance := helpergrpc.NumerictoFloat64(updatedAccount1.Balance)
 
 	// convert updatedAccount2.Balance string to float64
-	updatedAccount2Balance, err := strconv.ParseFloat(updatedAccount2.Balance, 64)
-	require.NoError(t, err)
+	updatedAccount2Balance := helpergrpc.NumerictoFloat64(updatedAccount2.Balance)
 
 	require.Equal(t, accountOneBalance-float64(n)*float64(amount), updatedAccount1Balance)
 	require.Equal(t, accountTwoBalance+float64(n)*float64(amount), updatedAccount2Balance)
 }
 
 func TestCreateUserWithAccountTx(t *testing.T) {
-	store := NewStore(testDB)
 	hashPass, err := util.MakePasswordBcrypt("P4ssw0rd!")
 
 	require.NoError(t, err)
@@ -173,7 +167,7 @@ func TestCreateUserWithAccountTx(t *testing.T) {
 		Currency: util.RandomCurrency(),
 	}
 
-	res, err := store.CreateUserWithAccountTx(context.Background(), arg)
+	res, err := testStore.CreateUserWithAccountTx(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotZero(t, res.User.UserUUID)
 	require.NotZero(t, res.Account.AccountUUID)
@@ -182,12 +176,12 @@ func TestCreateUserWithAccountTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// check user
-	checkUser, err := store.GetUserByUserUUID(context.Background(), userUUID)
+	checkUser, err := testStore.GetUserByUserUUID(context.Background(), userUUID)
 	require.NoError(t, err)
 	require.NotEmpty(t, checkUser)
 
 	// check account
-	checkAccount, err := store.GetAccountByUUID(context.Background(), res.Account.AccountUUID)
+	checkAccount, err := testStore.GetAccountByUUID(context.Background(), res.Account.AccountUUID)
 	require.NoError(t, err)
 	require.NotEmpty(t, checkAccount)
 
@@ -195,8 +189,6 @@ func TestCreateUserWithAccountTx(t *testing.T) {
 }
 
 func TestCreateUserWithAccountTxExist(t *testing.T) {
-	store := NewStore(testDB)
-
 	user := GenerateUser(t)
 	arg := request.CreateUserRequest{
 		Username: user.Username,
@@ -206,13 +198,11 @@ func TestCreateUserWithAccountTxExist(t *testing.T) {
 		Currency: util.RandomCurrency(),
 	}
 
-	_, err := store.CreateUserWithAccountTx(context.Background(), arg)
+	_, err := testStore.CreateUserWithAccountTx(context.Background(), arg)
 	require.Error(t, err)
 }
 
 func TestTransTxDeadlock(t *testing.T) {
-	store := NewStore(testDB)
-
 	account1 := generateAccount(t)
 	account2 := generateAccount(t)
 
@@ -235,7 +225,7 @@ func TestTransTxDeadlock(t *testing.T) {
 			toAccountID = account1.ID
 		}
 		go func() {
-			_, err := store.TransferTx(context.Background(), TransferTxParam{
+			_, err := testStore.TransferTx(context.Background(), TransferTxParam{
 				FromAccountID: fromAccountID,
 				ToAccountID:   toAccountID,
 				Amount:        amount,
@@ -254,24 +244,24 @@ func TestTransTxDeadlock(t *testing.T) {
 	}
 
 	// check the final updated balance
-	updatedAccount1, err := store.GetAccount(context.Background(), account1.ID)
+	updatedAccount1, err := testStore.GetAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
 
-	updatedAccount2, err := store.GetAccount(context.Background(), account2.ID)
+	updatedAccount2, err := testStore.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
 
 	fmt.Println(">> after:", updatedAccount1.Balance, updatedAccount2.Balance)
-	accountOneBalance, err := strconv.ParseFloat(account1.Balance, 64)
+	accountOneBalance, err := strconv.ParseFloat(account1.Balance.Int.String(), 64)
 	require.NoError(t, err)
-	accountTwoBalance, err := strconv.ParseFloat(account2.Balance, 64)
+	accountTwoBalance, err := strconv.ParseFloat(account2.Balance.Int.String(), 64)
 	require.NoError(t, err)
 
 	// convert updatedAccount1.Balance string to float64
-	updatedAccount1Balance, err := strconv.ParseFloat(updatedAccount1.Balance, 64)
+	updatedAccount1Balance, err := strconv.ParseFloat(updatedAccount1.Balance.Int.String(), 64)
 	require.NoError(t, err)
 
 	// convert updatedAccount2.Balance string to float64
-	updatedAccount2Balance, err := strconv.ParseFloat(updatedAccount2.Balance, 64)
+	updatedAccount2Balance, err := strconv.ParseFloat(updatedAccount2.Balance.Int.String(), 64)
 	require.NoError(t, err)
 
 	require.Equal(t, accountOneBalance, updatedAccount1Balance)
