@@ -2,7 +2,6 @@ package setup
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net"
 	"net/http"
@@ -27,12 +26,14 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
 )
 
 // DbConnection establishes a connection to the database using the provided configuration.
 // It returns a pointer to the sql.DB object representing the database connection.
-func DbConnection(config util.Config) *sql.DB {
+func DbConnection(config util.Config) *pgxpool.Pool {
 	dbUser := config.DBUser
 	dbPassword := config.DBPassword
 	dbHost := config.DBHost
@@ -44,7 +45,7 @@ func DbConnection(config util.Config) *sql.DB {
 	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
 		dbUser, dbPassword, dbHost, dbPort, dbName, dbSSLMode)
 
-	conn, err := sql.Open("postgres", connStr)
+	conn, err := pgxpool.New(context.Background(), connStr)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot open a connection to the database")
@@ -70,7 +71,7 @@ func RedisConnection(config util.Config) *redis.Client {
 }
 
 // GetDbStore returns a new instance of db.Store using the provided configuration and database connection.
-func GetDbStore(config util.Config, conn *sql.DB) db.Store {
+func GetDbStore(config util.Config, conn *pgxpool.Pool) db.Store {
 	store := db.NewStore(conn)
 	return store
 }
@@ -172,7 +173,7 @@ func InitializeAndStartGatewayServer(config util.Config, store db.Store, redisCl
 // 4. Logs a success message if the migration is successful.
 // 5. Creates a seeder object using the provided database connection.
 // 6. Seeds the database with initial data using the seeder object.
-func InitializeDBMigrationsAndSeeder(config util.Config, conn *sql.DB) {
+func InitializeDBMigrationsAndSeeder(config util.Config, conn *pgxpool.Pool) {
 	// migration
 	dbConf := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", config.DBUser, config.DBPassword, config.DBHost, config.DBPort, config.DBName, config.DBSSLMode)
 	m, err := migrate.New(config.DBSource, dbConf)

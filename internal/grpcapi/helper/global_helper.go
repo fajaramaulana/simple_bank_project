@@ -2,9 +2,11 @@ package helper
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func ConvertStringToUUID(s string) (uuid.UUID, error) {
@@ -30,4 +32,25 @@ func MapToSlice(m map[string]string, separator string) []string {
 		result = append(result, fmt.Sprintf("%s%s%s", key, separator, value))
 	}
 	return result
+}
+
+func NumericToBigInt(n pgtype.Numeric) *big.Int {
+	result := new(big.Int)
+	result.SetBytes(n.Int.Bytes())
+	exp := int64(n.Exp)
+	if exp > 0 {
+		result.Mul(result, big.NewInt(0).Exp(big.NewInt(10), big.NewInt(exp), nil))
+	} else if exp < 0 {
+		result.Div(result, big.NewInt(0).Exp(big.NewInt(10), big.NewInt(-exp), nil))
+	}
+	return result
+}
+
+func bigIntToFloat64(n *big.Int) float64 {
+	floatVal, _ := new(big.Float).SetInt(n).Float64()
+	return floatVal
+}
+
+func NumerictoFloat64(n pgtype.Numeric) float64 {
+	return bigIntToFloat64(NumericToBigInt(n))
 }

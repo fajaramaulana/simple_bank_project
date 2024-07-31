@@ -45,12 +45,12 @@ func (tf *TransactionController) CreateTransfer(ctx *gin.Context) {
 	transfer, err := tf.transactionService.CreateTransferTrans(ctx.Request.Context(), &req, authPayload)
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
-		if err.Error() == "sql: no rows in result set: from account not found" {
+		if err.Error() == "no rows in result set: from account not found" {
 			helper.ReturnJSONError(ctx, http.StatusNotFound, "from account not found", nil, nil)
 			return
 		}
 
-		if err.Error() == "sql: no rows in result set: to account not found" {
+		if err.Error() == "no rows in result set: to account not found" {
 			helper.ReturnJSONError(ctx, http.StatusNotFound, "to account not found", nil, nil)
 			return
 		}

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,6 +20,7 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -436,7 +438,7 @@ func randomAccount(t *testing.T, Useruuid uuid.UUID) db.GetAccountByUUIDRow {
 	return db.GetAccountByUUIDRow{
 		ID:          int64(randomInt[0]),
 		Owner:       util.RandomName(),
-		Balance:     util.RandomMoney(r, 10.00, 99999999.00),
+		Balance:     pgtype.Numeric{Int: big.NewInt(util.RandomMoneyInt(r, 10.00, 99999999.00))},
 		Currency:    util.RandomCurrency(),
 		AccountUuid: uuid.New(),
 		UserUuid:    Useruuid,

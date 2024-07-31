@@ -1,26 +1,27 @@
 package seed
 
 import (
-	"database/sql"
+	"context"
 	"time"
 
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 )
 
 type Seeder struct {
-	conn *sql.DB
+	conn *pgxpool.Pool
 }
 
-func NewSeeder(conn *sql.DB) *Seeder {
+func NewSeeder(conn *pgxpool.Pool) *Seeder {
 	return &Seeder{conn: conn}
 }
 
 func (s *Seeder) Seed() {
 	// check is table users empty
 	var count int
-	err := s.conn.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	err := s.conn.QueryRow(context.Background(), "SELECT COUNT(*) FROM users").Scan(&count)
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot count users")
@@ -71,7 +72,7 @@ func (s *Seeder) Seed() {
 
 		// insert to table users
 		for _, v := range arg {
-			_, err := s.conn.Exec("INSERT INTO users (username, user_uuid, hashed_password, full_name, email, role, created_at, verified_email_at, verification_email_code) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", v["username"], v["user_uuid"], v["hashed_password"], v["full_name"], v["email"], v["role"], v["created_at"], v["verified_email_at"], v["verification_email_code"])
+			_, err := s.conn.Exec(context.Background(), "INSERT INTO users (username, user_uuid, hashed_password, full_name, email, role, created_at, verified_email_at, verification_email_code) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", v["username"], v["user_uuid"], v["hashed_password"], v["full_name"], v["email"], v["role"], v["created_at"], v["verified_email_at"], v["verification_email_code"])
 			if err != nil {
 				log.Fatal().Err(err).Msg("Cannot insert users")
 			}
@@ -107,7 +108,7 @@ func (s *Seeder) Seed() {
 			},
 		}
 		for _, v := range argAccount {
-			_, err := s.conn.Exec("INSERT INTO accounts (user_uuid, owner, currency, balance, status, created_at, account_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7)", v["user_uuid"], v["owner"], v["currency"], v["balance"], v["status"], v["created_at"], v["account_uuid"])
+			_, err := s.conn.Exec(context.Background(), "INSERT INTO accounts (user_uuid, owner, currency, balance, status, created_at, account_uuid) VALUES ($1, $2, $3, $4, $5, $6, $7)", v["user_uuid"], v["owner"], v["currency"], v["balance"], v["status"], v["created_at"], v["account_uuid"])
 			if err != nil {
 				log.Fatal().Err(err).Msg("Cannot insert accounts")
 			}

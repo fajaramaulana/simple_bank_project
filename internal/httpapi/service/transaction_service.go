@@ -57,7 +57,7 @@ func (a *TransactionService) CreateTransferTrans(ctx context.Context, req *reque
 	// end check if to account exists
 
 	// convert existing balance to float64
-	fromAccountBalance, err := strconv.ParseFloat(dataFromAccount.Balance, 64)
+	fromAccountBalance, err := strconv.ParseFloat(dataFromAccount.Balance.Int.String(), 64)
 	if err != nil {
 		return response.SuccessTransactionResponse{}, err
 	}
@@ -101,9 +101,9 @@ func (a *TransactionService) CreateTransferTrans(ctx context.Context, req *reque
 		TransactionUUID: res.Transaction.TransactionUuid.String(),
 		FromAccountUUID: res.FromAccount.AccountUuid.String(),
 		ToAccountUUID:   res.ToAccount.AccountUuid.String(),
-		Amount:          res.Transaction.Amount,
+		Amount:          res.Transaction.Amount.Int.String(),
 		Currency:        dataFromAccount.Currency,
-		LastedBalance:   res.FromAccount.Balance,
+		LastedBalance:   res.FromAccount.Balance.Int.String(),
 		Type:            "transfer",
 	}, nil
 

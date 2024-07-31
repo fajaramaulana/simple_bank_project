@@ -54,7 +54,7 @@ func (a *AccountController) CreateAccount(ctx *gin.Context) {
 
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
-		if err.Error() == "sql: no rows in result set" {
+		if err.Error() == "no rows in result set" {
 			helper.ReturnJSONError(ctx, http.StatusNotFound, "Data Not found", nil, nil)
 		} else {
 			helper.ReturnJSONError(ctx, http.StatusInternalServerError, "Internal server error", nil, err.Error())
@@ -101,7 +101,7 @@ func (a *AccountController) GetAccount(ctx *gin.Context) {
 			log.Println("Error: Unauthorized")
 			helper.ReturnJSONError(ctx, http.StatusUnauthorized, "Unauthorized", nil, nil)
 			return
-		} else if err.Error() == "sql: no rows in result set" {
+		} else if err.Error() == "no rows in result set" {
 			log.Println("Error: Data not found")
 			helper.ReturnJSONError(ctx, http.StatusNotFound, "Data not found", nil, nil)
 			return
@@ -224,7 +224,7 @@ func (a *AccountController) UpdateAccount(ctx *gin.Context) {
 	account, err := a.accountService.UpdateAccount(ctx.Request.Context(), arg, authPayload)
 
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if err.Error() == "no rows in result set" {
 			log.Println("Error: Data not found")
 			helper.ReturnJSONError(ctx, http.StatusNotFound, "Data not found", nil, nil)
 			return
