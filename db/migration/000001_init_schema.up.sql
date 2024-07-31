@@ -3,7 +3,7 @@ CREATE TABLE "accounts" (
   "user_uuid" UUID NOT NULL,
   "owner" varchar NOT NULL,
   "currency" varchar NOT NULL,
-  "balance" decimal NOT NULL,
+  "balance" NUMERIC(20,0) NOT NULL,
   "status" smallint NOT NULL DEFAULT 1,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
@@ -11,7 +11,7 @@ CREATE TABLE "accounts" (
 CREATE TABLE "entries" (
   "id" bigserial PRIMARY KEY,
   "account_id" bigint NOT NULL,
-  "amount" decimal NOT NULL,
+  "amount" NUMERIC(20,0) NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
 
@@ -19,7 +19,7 @@ CREATE TABLE "transactions" (
   "id" bigserial PRIMARY KEY,
   "from_account_id" bigint NOT NULL,
   "to_account_id" bigint NOT NULL,
-  "amount" decimal NOT NULL,
+  "amount" NUMERIC(20,0) NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
 
