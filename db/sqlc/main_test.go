@@ -1,18 +1,17 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"testing"
 
 	"github.com/fajaramaulana/simple_bank_project/util"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var testQueries *Queries
-var testDB *sql.DB
+var testStore Store
 
 func TestMain(m *testing.M) {
 	// checking if already have .env file
@@ -33,13 +32,13 @@ func TestMain(m *testing.M) {
 	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s",
 		dbUser, dbPassword, dbHost, dbPort, dbName, dbSSLMode)
 
-	testDB, err = sql.Open("postgres", connStr)
-
+	// testDB, err = sql.Open("postgres", connStr)
+	connPool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		log.Fatal("Cannot connect to DB: ", err)
 	}
 
-	testQueries = New(testDB)
+	testStore = NewStore(connPool)
 
 	os.Exit(m.Run())
 }
