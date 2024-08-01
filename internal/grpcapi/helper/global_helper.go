@@ -54,3 +54,7 @@ func bigIntToFloat64(n *big.Int) float64 {
 func NumerictoFloat64(n pgtype.Numeric) float64 {
 	return bigIntToFloat64(NumericToBigInt(n))
 }
+
+func NumericToString(n pgtype.Numeric) string {
+	return NumericToBigInt(n).String()
+}
