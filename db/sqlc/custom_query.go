@@ -49,7 +49,6 @@ func (store *SQLStore) TransferTx(ctx context.Context, param TransferTxParam) (T
 			ToAccountID:   param.ToAccountID,
 			Amount:        pgtype.Numeric{Int: big.NewInt(param.Amount), Exp: 0, Valid: true},
 		}
-		fmt.Printf("%# v\n", arg)
 		result.Transaction, err = q.CreateTransaction(ctx, arg)
 
 		if err != nil {
