@@ -14,6 +14,7 @@ import (
 
 	mockdb "github.com/fajaramaulana/simple_bank_project/db/mock"
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/middleware"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
@@ -426,7 +427,7 @@ func requireBodyMatchAccount(t *testing.T, body *bytes.Buffer, account db.GetAcc
 
 	require.Equal(t, account.AccountUuid.String(), accountUuid, "AccountUuid mismatch")
 	require.Equal(t, account.Owner, owner, "Owner mismatch")
-	require.Equal(t, account.Balance, balance, "Balance mismatch")
+	require.Equal(t, helper.NumericToBigInt(account.Balance).String(), balance, "Balance mismatch")
 	require.Equal(t, account.Currency, currency, "Currency mismatch")
 }
 

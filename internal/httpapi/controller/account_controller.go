@@ -101,7 +101,7 @@ func (a *AccountController) GetAccount(ctx *gin.Context) {
 			log.Println("Error: Unauthorized")
 			helper.ReturnJSONError(ctx, http.StatusUnauthorized, "Unauthorized", nil, nil)
 			return
-		} else if err.Error() == "no rows in result set" {
+		} else if err.Error() == "sql: no rows in result set" {
 			log.Println("Error: Data not found")
 			helper.ReturnJSONError(ctx, http.StatusNotFound, "Data not found", nil, nil)
 			return

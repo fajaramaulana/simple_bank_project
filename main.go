@@ -1,16 +1,16 @@
 package main
 
 import (
-	"context"
 	"os"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
-	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/runner"
 	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/setup"
+	setuphttp "github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 )
 
@@ -34,24 +34,26 @@ func main() {
 	conn := setup.DbConnection(config)
 
 	// Create a database store
-	store := setup.GetDbStore(config, conn)
+	// store := setup.GetDbStore(config, conn)
 
-	redisClient := setup.RedisConnection(config)
+	// redisClient := setup.RedisConnection(config)
 
 	setup.InitializeDBMigrationsAndSeeder(config, conn)
 
 	// Start the gateway server in a separate goroutine
-	go runGatewayServer(config, store, redisClient)
+	// go runGatewayServer(config, store, redisClient)
 
-	go runner.SendVerificationEmails(context.Background(), redisClient, config)
+	// go runner.SendVerificationEmails(context.Background(), redisClient, config)
+
+	runGinServer(config, conn)
 
 	// Start the gRPC server
-	rungRPCServer(config, store, redisClient)
+	// rungRPCServer(config, store, redisClient)
 }
 
-// func runGinServer(config util.Config, conn *sql.DB) {
-// 	setuphttp.InitializeAndStartAppHTTPApi(config, conn)
-// }
+func runGinServer(config util.Config, conn *pgxpool.Pool) {
+	setuphttp.InitializeAndStartAppHTTPApi(config, conn)
+}
 
 // rungRPCServer starts the gRPC server using the provided configuration and database store.
 func rungRPCServer(config util.Config, store db.Store, redisClient *redis.Client) {

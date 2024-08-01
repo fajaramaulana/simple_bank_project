@@ -9,7 +9,6 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/response"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/util"
-	"github.com/jackc/pgx/v5"
 )
 
 var (
@@ -32,7 +31,7 @@ func NewAuthService(db db.Store, configToken map[string]string) *AuthService {
 func (a *AuthService) Login(ctx context.Context, username, password, userAgent, ClientIP string) (response.AuthLoginResponse, error) {
 	detailLogin, err := a.db.GetDetailLoginByUsername(ctx, username)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err.Error() == "sql: no rows in result set" {
 			return response.AuthLoginResponse{}, ErrUserNotFound
 		}
 		return response.AuthLoginResponse{}, err

@@ -45,7 +45,7 @@ func (a *AccountService) CreateAccount(ctx context.Context, request *request.Cre
 
 	checkUserUUIDCurrency, err := a.db.GetAccountByUserUUIDAndCurrency(ctx, param)
 	if err != nil {
-		if err.Error() != "no rows in result set" {
+		if err.Error() != "sql: no rows in result set" {
 			return response.AccountResponseCreate{}, err
 		}
 	}
@@ -85,7 +85,7 @@ func (a *AccountService) CreateAccount(ctx context.Context, request *request.Cre
 func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID, authPayload *token.Payload) (response.AccountResponseGet, error) {
 	account, err := a.db.GetAccountByUUID(ctx, uuid)
 	if err != nil {
-		// if err.Error() != "no rows in result set" {
+		// if err.Error() != "sql: no rows in result set" {
 		return response.AccountResponseGet{}, err
 		// }
 
@@ -97,7 +97,7 @@ func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID, a
 
 	user, err := a.db.GetUserByUserUUID(ctx, account.UserUuid)
 	if err != nil {
-		// if err.Error() != "no rows in result set" {
+		// if err.Error() != "sql: no rows in result set" {
 		return response.AccountResponseGet{}, err
 		// }
 	}
