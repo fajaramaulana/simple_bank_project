@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,12 +14,14 @@ import (
 
 	mockdb "github.com/fajaramaulana/simple_bank_project/db/mock"
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/helper"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/middleware"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/setup"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -424,7 +427,7 @@ func requireBodyMatchAccount(t *testing.T, body *bytes.Buffer, account db.GetAcc
 
 	require.Equal(t, account.AccountUuid.String(), accountUuid, "AccountUuid mismatch")
 	require.Equal(t, account.Owner, owner, "Owner mismatch")
-	require.Equal(t, account.Balance, balance, "Balance mismatch")
+	require.Equal(t, helper.NumericToBigInt(account.Balance).String(), balance, "Balance mismatch")
 	require.Equal(t, account.Currency, currency, "Currency mismatch")
 }
 
@@ -436,7 +439,7 @@ func randomAccount(t *testing.T, Useruuid uuid.UUID) db.GetAccountByUUIDRow {
 	return db.GetAccountByUUIDRow{
 		ID:          int64(randomInt[0]),
 		Owner:       util.RandomName(),
-		Balance:     util.RandomMoney(r, 10.00, 99999999.00),
+		Balance:     pgtype.Numeric{Int: big.NewInt(util.RandomMoneyInt(r, 10.00, 99999999.00))},
 		Currency:    util.RandomCurrency(),
 		AccountUuid: uuid.New(),
 		UserUuid:    Useruuid,

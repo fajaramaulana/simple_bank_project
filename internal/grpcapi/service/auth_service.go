@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
@@ -10,6 +9,8 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -27,7 +28,7 @@ func NewAuthService(db db.Store, config util.Config) *AuthService {
 func (s *AuthService) LoginUser(ctx context.Context, req *pb.LoginUserRequest, metaData *shared.Metadata) (*pb.LoginUserResponse, error) {
 	detailLogin, err := s.db.GetDetailLoginByUsername(ctx, req.GetUsername())
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			// return nil, ErrUserNotFound
 			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
@@ -101,9 +102,9 @@ func (s *AuthService) LoginUser(ctx context.Context, req *pb.LoginUserRequest, m
 }
 
 func (s *AuthService) VerifyUserEmail(ctx context.Context, req *pb.VerifyEmailRequest) (*pb.VerifyEmailResponse, error) {
-	checkVerCode, err := s.db.GetUserByVerificationEmailCode(ctx, sql.NullString{String: req.GetVerificationCode(), Valid: true})
+	checkVerCode, err := s.db.GetUserByVerificationEmailCode(ctx, pgtype.Text{String: req.GetVerificationCode(), Valid: true})
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, status.Errorf(codes.NotFound, "verification code not found")
 		}
 		return nil, status.Error(codes.Internal, "internal error")
@@ -112,14 +113,15 @@ func (s *AuthService) VerifyUserEmail(ctx context.Context, req *pb.VerifyEmailRe
 	if checkVerCode.VerificationEmailExpiredAt.Time.Before(time.Now()) {
 		return nil, status.Error(codes.InvalidArgument, "verification code is expired")
 	}
-	if checkVerCode.VerifiedEmailAt.String() != "0001-01-01 00:00:00 +0000 UTC" {
+
+	if checkVerCode.VerifiedEmailAt.String() != "0001-01-01 07:00:00 +0700 +07" {
 		return nil, status.Error(codes.InvalidArgument, "email already verified")
 	}
 
 	_, err = s.db.UpdateUserVerificationEmail(ctx, db.UpdateUserVerificationEmailParams{
-		VerificationEmailCode:      sql.NullString{String: req.GetVerificationCode(), Valid: true},
+		VerificationEmailCode:      pgtype.Text{String: req.GetVerificationCode(), Valid: true},
 		UserUuid:                   checkVerCode.UserUuid,
-		VerificationEmailExpiredAt: sql.NullTime{Time: checkVerCode.VerificationEmailExpiredAt.Time, Valid: true},
+		VerificationEmailExpiredAt: pgtype.Timestamptz{Time: checkVerCode.VerificationEmailExpiredAt.Time, Valid: true},
 		VerifiedEmailAt:            time.Now(),
 	})
 

@@ -6,9 +6,9 @@ package db
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -33,7 +33,7 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserByUserUUID(ctx context.Context, userUuid uuid.UUID) (GetUserByUserUUIDRow, error)
 	GetUserByUsername(ctx context.Context, username string) (GetUserByUsernameRow, error)
-	GetUserByVerificationEmailCode(ctx context.Context, verificationEmailCode sql.NullString) (GetUserByVerificationEmailCodeRow, error)
+	GetUserByVerificationEmailCode(ctx context.Context, verificationEmailCode pgtype.Text) (GetUserByVerificationEmailCodeRow, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListAccountsByUserUUID(ctx context.Context, arg ListAccountsByUserUUIDParams) ([]ListAccountsByUserUUIDRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]Entry, error)

@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func TestCreateUser(t *testing.T) {
 func TestGetByEmail(t *testing.T) {
 	user := GenerateUser(t)
 
-	userByEmail, err := testQueries.GetUserByEmail(context.Background(), user.Email)
+	userByEmail, err := testStore.GetUserByEmail(context.Background(), user.Email)
 	require.NoError(t, err)
 	require.NotEmpty(t, userByEmail)
 	require.Equal(t, user.Email, userByEmail.Email)
@@ -28,7 +28,7 @@ func TestGetByEmail(t *testing.T) {
 func TestGetByUsername(t *testing.T) {
 	user := GenerateUser(t)
 
-	userByUsername, err := testQueries.GetUserByUsername(context.Background(), user.Username)
+	userByUsername, err := testStore.GetUserByUsername(context.Background(), user.Username)
 	require.NoError(t, err)
 	require.NotEmpty(t, userByUsername)
 	require.Equal(t, user.Email, userByUsername.Email)
@@ -42,13 +42,13 @@ func TestUpdateUser(t *testing.T) {
 	require.NoError(t, err)
 	arg := UpdateUserParams{
 		UserUuid:          user.UserUuid,
-		HashedPassword:    sql.NullString{String: hashedPassword, Valid: true},
-		Email:             sql.NullString{String: util.RandomEmail(), Valid: true},
-		FullName:          sql.NullString{String: util.RandomName(), Valid: true},
-		PasswordChangedAt: sql.NullTime{Time: time.Now(), Valid: true},
+		HashedPassword:    pgtype.Text{String: hashedPassword, Valid: true},
+		Email:             pgtype.Text{String: util.RandomEmail(), Valid: true},
+		FullName:          pgtype.Text{String: util.RandomName(), Valid: true},
+		PasswordChangedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
 	}
 
-	updatedUser, err := testQueries.UpdateUser(context.Background(), arg)
+	updatedUser, err := testStore.UpdateUser(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.Equal(t, arg.Email.String, updatedUser.Email)
@@ -64,11 +64,11 @@ func TestUpdatePassword(t *testing.T) {
 
 	arg := UpdateUserPasswordParams{
 		UserUuid:          user.UserUuid,
-		HashedPassword:    sql.NullString{String: hashedPassword, Valid: true},
-		PasswordChangedAt: sql.NullTime{Time: time.Now(), Valid: true},
+		HashedPassword:    pgtype.Text{String: hashedPassword, Valid: true},
+		PasswordChangedAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
 	}
 
-	updatedUser, err := testQueries.UpdateUserPassword(context.Background(), arg)
+	updatedUser, err := testStore.UpdateUserPassword(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, updatedUser)
 	require.Equal(t, arg.UserUuid, updatedUser.UserUuid)
@@ -77,9 +77,9 @@ func TestUpdatePassword(t *testing.T) {
 func TestUpdateUserFullName(t *testing.T) {
 	user := GenerateUser(t)
 
-	res, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+	res, err := testStore.UpdateUser(context.Background(), UpdateUserParams{
 		UserUuid: user.UserUuid,
-		FullName: sql.NullString{String: "New Name", Valid: true},
+		FullName: pgtype.Text{String: "New Name", Valid: true},
 	})
 
 	require.NoError(t, err)
@@ -98,7 +98,7 @@ func GenerateUser(t *testing.T) CreateUserRow {
 		Email:          util.RandomEmail(),
 	}
 
-	user, err := testQueries.CreateUser(context.Background(), inputUser)
+	user, err := testStore.CreateUser(context.Background(), inputUser)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user)

@@ -11,12 +11,12 @@ package mockdb
 
 import (
 	context "context"
-	sql "database/sql"
 	reflect "reflect"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	request "github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	uuid "github.com/google/uuid"
+	pgtype "github.com/jackc/pgx/v5/pgtype"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -374,7 +374,7 @@ func (mr *MockStoreMockRecorder) GetUserByUsername(arg0, arg1 any) *gomock.Call 
 }
 
 // GetUserByVerificationEmailCode mocks base method.
-func (m *MockStore) GetUserByVerificationEmailCode(arg0 context.Context, arg1 sql.NullString) (db.GetUserByVerificationEmailCodeRow, error) {
+func (m *MockStore) GetUserByVerificationEmailCode(arg0 context.Context, arg1 pgtype.Text) (db.GetUserByVerificationEmailCodeRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserByVerificationEmailCode", arg0, arg1)
 	ret0, _ := ret[0].(db.GetUserByVerificationEmailCodeRow)

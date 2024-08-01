@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/router"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/service"
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
 
 	_ "github.com/lib/pq"
@@ -45,11 +47,11 @@ func DbConnection(config util.Config) *sql.DB {
 // If the 'users' table is empty, it inserts default user data into the table.
 // Then, it creates instances of various services, controllers, and the router.
 // Finally, it starts the server on the specified port.
-func InitializeAndStartAppHTTPApi(config util.Config, conn *sql.DB) {
+func InitializeAndStartAppHTTPApi(config util.Config, conn *pgxpool.Pool) {
 
 	// checking table user is empty or not and return count
 	var count int
-	row := conn.QueryRow("SELECT COUNT(*) FROM users")
+	row := conn.QueryRow(context.Background(), "SELECT COUNT(*) FROM users")
 	err := row.Scan(&count)
 	if err != nil {
 		log.Fatal("Cannot check table users: ", err)
@@ -68,7 +70,7 @@ func InitializeAndStartAppHTTPApi(config util.Config, conn *sql.DB) {
 		}
 
 		for _, query := range queries {
-			_, err := conn.Exec(query)
+			_, err := conn.Exec(context.Background(), query)
 			if err != nil {
 				log.Fatal("Cannot insert data to DB: ", err)
 			}

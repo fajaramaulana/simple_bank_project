@@ -58,6 +58,7 @@ func (c *UserController) UpdateUser(ctx context.Context, req *pb.UpdateUserReque
 		log.Error().Msg("access denied: user uuid is not match")
 		return nil, helper.UnauthenticatedError(errors.New("access denied: user uuid is not match"))
 	}
+
 	violations := validate.ValidateUpdateUserRequest(req)
 	if violations != nil {
 		log.Error().Err(helper.InvalidArgumentError(violations)).Msg("UpdateUserRequest is invalid")

@@ -3,12 +3,14 @@ package service
 import (
 	"context"
 	"errors"
+	"math/big"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/request"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/response"
 	"github.com/fajaramaulana/simple_bank_project/internal/httpapi/handler/token"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AccountService struct {
@@ -56,7 +58,7 @@ func (a *AccountService) CreateAccount(ctx context.Context, request *request.Cre
 	account, err := a.db.CreateAccount(ctx, db.CreateAccountParams{
 		Owner:    user.FullName,
 		Currency: request.Currency,
-		Balance:  "0",
+		Balance:  pgtype.Numeric{Int: big.NewInt(0), Valid: true},
 		UserUuid: useruuid,
 	})
 
@@ -68,7 +70,7 @@ func (a *AccountService) CreateAccount(ctx context.Context, request *request.Cre
 		AccountUUID: account.AccountUuid,
 		Owner:       account.Owner,
 		Currency:    account.Currency,
-		Balance:     account.Balance,
+		Balance:     account.Balance.Int.String(),
 		User: response.UserGetSimple{
 			UserUUID: user.UserUuid.String(),
 			Username: user.Username,
@@ -104,7 +106,7 @@ func (a *AccountService) GetAccountByUUID(ctx context.Context, uuid uuid.UUID, a
 		AccountUUID: account.AccountUuid,
 		Owner:       account.Owner,
 		Currency:    account.Currency,
-		Balance:     account.Balance,
+		Balance:     account.Balance.Int.String(),
 		CreatedAt:   account.CreatedAt,
 		Status:      int32(account.Status),
 		User: response.UserGetSimple{
@@ -139,7 +141,7 @@ func (a *AccountService) ListAccount(ctx context.Context, param db.ListAccountsP
 				AccountUUID: account.AccountUuid,
 				Owner:       account.Owner,
 				Currency:    account.Currency,
-				Balance:     account.Balance,
+				Balance:     account.Balance.Int.String(),
 				CreatedAt:   account.CreatedAt,
 				Status:      int32(account.Status),
 				User: response.UserGetSimple{
@@ -177,7 +179,7 @@ func (a *AccountService) ListAccount(ctx context.Context, param db.ListAccountsP
 				AccountUUID: account.AccountUuid,
 				Owner:       account.Owner,
 				Currency:    account.Currency,
-				Balance:     account.Balance,
+				Balance:     account.Balance.Int.String(),
 				CreatedAt:   account.CreatedAt,
 				Status:      int32(account.Status),
 				User: response.UserGetSimple{
@@ -218,7 +220,7 @@ func (a *AccountService) UpdateAccount(ctx context.Context, arg db.UpdateProfile
 		AccountUUID: account.AccountUuid,
 		Owner:       account.Owner,
 		Currency:    account.Currency,
-		Balance:     account.Balance,
+		Balance:     account.Balance.Int.String(),
 		CreatedAt:   account.CreatedAt,
 		Status:      int32(account.Status),
 		User: response.UserGetSimple{

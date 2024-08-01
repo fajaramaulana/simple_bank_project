@@ -47,6 +47,11 @@ func RandomMoney(r *rand.Rand, min, max float64) string {
 	return fmt.Sprintf("%.2f", amount)
 }
 
+func RandomMoneyInt(r *rand.Rand, min, max float64) int64 {
+	amount := min + r.Float64()*(max-min)
+	return int64(amount)
+}
+
 func RandomEmail() string {
 	return faker.Email()
 }

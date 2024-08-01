@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"time"
 
@@ -32,7 +31,7 @@ func NewAuthService(db db.Store, configToken map[string]string) *AuthService {
 func (a *AuthService) Login(ctx context.Context, username, password, userAgent, ClientIP string) (response.AuthLoginResponse, error) {
 	detailLogin, err := a.db.GetDetailLoginByUsername(ctx, username)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err.Error() == "sql: no rows in result set" {
 			return response.AuthLoginResponse{}, ErrUserNotFound
 		}
 		return response.AuthLoginResponse{}, err

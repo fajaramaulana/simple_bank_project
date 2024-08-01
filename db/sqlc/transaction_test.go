@@ -2,9 +2,12 @@ package db
 
 import (
 	"context"
+	"math/big"
 	"testing"
 
+	"github.com/fajaramaulana/simple_bank_project/internal/grpcapi/helper"
 	"github.com/fajaramaulana/simple_bank_project/util"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,17 +16,17 @@ func generateRandomTransaction(t *testing.T, acc1 CreateAccountRow, acc2 CreateA
 	input := CreateTransactionParams{
 		FromAccountID: acc1.ID,
 		ToAccountID:   acc2.ID,
-		Amount:        util.RandomMoney(r, 0.001, 999999999.0),
+		Amount:        pgtype.Numeric{Int: big.NewInt(util.RandomMoneyInt(r, 0.001, 999999999.0)), Valid: true},
 	}
 
-	transaction, err := testQueries.CreateTransaction(context.Background(), input)
+	transaction, err := testStore.CreateTransaction(context.Background(), input)
 
 	// if e
 	require.NoError(t, err)
 	require.NotEmpty(t, transaction)
 	require.Equal(t, input.FromAccountID, transaction.FromAccountID)
 	require.Equal(t, input.ToAccountID, transaction.ToAccountID)
-	require.Equal(t, input.Amount, transaction.Amount)
+	require.Equal(t, helper.NumerictoFloat64(input.Amount), helper.NumerictoFloat64(transaction.Amount))
 	require.NotEmpty(t, transaction.TransactionUuid.String())
 	require.NotNil(t, transaction.CreatedAt)
 	require.NotZero(t, transaction.ID)
@@ -43,7 +46,7 @@ func TestGetTransaction(t *testing.T) {
 	acc2 := generateAccount(t)
 	createRandTrans := generateRandomTransaction(t, acc1, acc2)
 
-	getFromTransaction, err := testQueries.GetTransaction(context.Background(), createRandTrans.ID)
+	getFromTransaction, err := testStore.GetTransaction(context.Background(), createRandTrans.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, getFromTransaction)
@@ -68,7 +71,7 @@ func TestListTransaction(t *testing.T) {
 		Offset:        5,
 	}
 
-	transactions, err := testQueries.ListTransactions(context.Background(), arg)
+	transactions, err := testStore.ListTransactions(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, transactions)

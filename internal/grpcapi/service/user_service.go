@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"database/sql"
+	"fmt"
 	"time"
 
 	db "github.com/fajaramaulana/simple_bank_project/db/sqlc"
@@ -11,6 +11,7 @@ import (
 	"github.com/fajaramaulana/simple_bank_project/pb"
 	"github.com/fajaramaulana/simple_bank_project/util"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,7 +31,8 @@ func NewUserService(db db.Store, config util.Config, redisClient *redis.Client) 
 func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserRespose, error) {
 	user, err := s.db.GetUserByEmail(ctx, req.GetEmail())
 	if err != nil {
-		if err.Error() != "sql: no rows in result set" {
+		fmt.Printf("%# v\n", err.Error())
+		if err.Error() != "no rows in result set" {
 			// return nil, err
 			return nil, status.Errorf(codes.Internal, "failed to get user by email: %v", err)
 		}
@@ -42,7 +44,8 @@ func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 
 	checkUsername, err := s.db.GetUserByUsername(ctx, req.GetUsername())
 	if err != nil {
-		if err.Error() != "sql: no rows in result set" {
+		fmt.Printf("%# v\n", err.Error())
+		if err.Error() != "no rows in result set" {
 			return nil, status.Errorf(codes.Internal, "failed to get user by username: %v", err)
 		}
 	}
@@ -79,11 +82,11 @@ func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 
 	argVerCode := db.UpdateUserVerificationEmailParams{
 		UserUuid: uuidUser,
-		VerificationEmailCode: sql.NullString{
+		VerificationEmailCode: pgtype.Text{
 			String: verificationCode,
 			Valid:  true,
 		},
-		VerificationEmailExpiredAt: sql.NullTime{
+		VerificationEmailExpiredAt: pgtype.Timestamptz{
 			Time:  time.Now().Add(time.Minute * 15),
 			Valid: true,
 		},
@@ -98,7 +101,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	keyRedis := "verification_email:users:" + userCreate.User.UserUUID
 	valueRedis := map[string]interface{}{
 		"verification_code": verificationCode,
-		"expired_at":        result.VerificationEmailExpiredAt,
+		"expired_at":        result.VerificationEmailExpiredAt.Time,
 		"email":             userCreate.User.Email,
 	}
 	_, err = s.redisClient.HSet(ctx, keyRedis, valueRedis).Result()
@@ -139,7 +142,7 @@ func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 
 	checkEmail, err := s.db.GetUserByEmail(ctx, req.GetEmail())
 	if err != nil {
-		if err.Error() != "sql: no rows in result set" {
+		if err.Error() != "no rows in result set" {
 			return nil, status.Errorf(codes.Internal, "failed to get user by email: %v", err)
 		}
 	}
@@ -149,11 +152,11 @@ func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 	}
 	arg := db.UpdateUserParams{
 		UserUuid: uuidUser,
-		Email: sql.NullString{
+		Email: pgtype.Text{
 			String: req.GetEmail(),
 			Valid:  req.Email != nil,
 		},
-		FullName: sql.NullString{
+		FullName: pgtype.Text{
 			String: req.GetFullName(),
 			Valid:  req.FullName != nil,
 		},
@@ -165,11 +168,11 @@ func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 			return nil, status.Errorf(codes.Internal, "failed to hash password: %v", err)
 		}
 
-		arg.HashedPassword = sql.NullString{
+		arg.HashedPassword = pgtype.Text{
 			String: hashPass,
 			Valid:  true,
 		}
-		arg.PasswordChangedAt = sql.NullTime{
+		arg.PasswordChangedAt = pgtype.Timestamptz{
 			Time:  time.Now(),
 			Valid: true,
 		}
@@ -197,7 +200,7 @@ func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 			AccountUuid: account.AccountUuid.String(),
 			Owner:       account.Owner,
 			Currency:    account.Currency,
-			Balance:     account.Balance,
+			Balance:     account.Balance.Int.String(),
 			CreatedAt:   timestamppb.New(account.CreatedAt),
 		})
 	}
